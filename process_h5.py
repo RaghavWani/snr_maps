@@ -1,13 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-from scipy.interpolate import griddata
 import argparse
 import logging
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.ticker import MaxNLocator
 from astropy import units as u
-from astropy.coordinates import SkyCoord
 from astropy.coordinates import Angle
 import h5py
 import os
@@ -21,6 +17,38 @@ log = logging.getLogger("snr_plot")
 
 #Input arguments = h5 file directory's path, tolerance value in seconds
 #Flaws - beam numbering might not be req, ra dec conv, dm-time filtering
+
+# Function to get ra dec from ahdr files 
+# [This function WILL NOT BE USED Once Ra Dec in filterbank issue is fixed]
+def ra_dec_from_ahdr(directory_path,beam_per_host):
+    """
+    Extracts RA, DEC, BM-Idx, and BM-SubIdx values from ahdr files in a directory.
+    Input: Directory containing ahdr files.
+    Returns: A DataFrame containing the extracted data: RA, DEC, BM-Idx, BM-SubIdx.
+    """
+    data_columns = ["RA", "DEC", "BM-Idx", "BM-SubIdx"]
+    stacked_data = pd.DataFrame(columns=data_columns)
+
+    # List all .ahdr files in the directory
+    ahdr_files = [os.path.join(directory_path, file) for file in os.listdir(directory_path) if file.endswith(".ahdr")]
+    if not ahdr_files:
+        print(f"No .ahdr files found in directory: {directory_path}")
+        return None
+    
+    for file in ahdr_files:
+        if os.path.exists(file):
+            with open(file, "r") as infile:
+                lines = infile.readlines()
+            
+                selected_lines = lines[28:28+beam_per_host]
+                
+                temp_df = pd.DataFrame([line.strip().split() for line in selected_lines], columns=data_columns)
+                stacked_data = pd.concat([stacked_data, temp_df], ignore_index=True)
+        else:
+            print(f"File {file} not found!")
+
+    stacked_data = stacked_data.apply(lambda col: pd.to_numeric(col, errors='coerce'))
+    return stacked_data
 
 # Function to explore h5 file structure
 def explore_h5(group, structure):
@@ -37,6 +65,7 @@ def explore_h5(group, structure):
             }
 
 #RA DEC in radians:
+# [This function WILL BE USED Once Ra Dec in filterbank issue is fixed]
 def hdms_to_rad(hhmmss, coord): 
     '''
     Converts hhmmss to radians
@@ -49,8 +78,7 @@ def hdms_to_rad(hhmmss, coord):
         hh = int(hhmmss/10000)
         mm = int(hhmmss/100 - hh*100)
         ss = float(hhmmss - hh*10000 - mm*100)
-        # print(hhmmss)
-        # print(f"{hh}:{mm}:{ss}")
+        
         if coord == "RA":
             angle = Angle(str(hh)+"h"+str(mm)+"m"+str(ss)+"s")
         elif coord == "DEC":
@@ -63,7 +91,7 @@ def hdms_to_rad(hhmmss, coord):
         return None
 
 # Function to convert h5 files to DataFrame
-def h5_to_dataframe(directory):
+def h5_to_dataframe(directory,header_dataframe):
     '''
     Converts h5 files information to dataframe
     Input: directory path of h5 files
@@ -77,11 +105,14 @@ def h5_to_dataframe(directory):
             with h5py.File(file_path, "r") as h5_file:
                 try:
                     beam_no = int(filename.split("_")[0].split("BM")[1])  # Adjust filename parsing
+                    ra = float(header_dataframe['RA'][beam_no])
+                    dec = float(header_dataframe['DEC'][beam_no])
+                
+                    # explore_h5(h5_file, file_structure)
+                    # ra = hdms_to_rad(file_structure['extras']['attributes']['src_raj'], "RA")
+                    # dec = hdms_to_rad(file_structure['extras']['attributes']['src_dej'], "DEC")
+                    # print(beam_no, file_structure['extras']['attributes']['src_raj'], file_structure['extras']['attributes']['src_dej'])
                     
-                    explore_h5(h5_file, file_structure)
-                    ra = hdms_to_rad(file_structure['extras']['attributes']['src_raj'], "RA")
-                    dec = hdms_to_rad(file_structure['extras']['attributes']['src_dej'], "DEC")
-                    print(beam_no, file_structure['extras']['attributes']['src_raj'], file_structure['extras']['attributes']['src_dej'])
                     snr = h5_file.attrs.get('snr', None)
                     time = h5_file.attrs.get('t0', None)
                     dm = h5_file.attrs.get('dm', None)
@@ -98,10 +129,8 @@ def time_filter(df,tolerance):
     Output: List of grouped DataFrames 
     '''
     
-    df = df.sort_values('Time') # Sort by time
-    #tolerance = pd.Timedelta(seconds=tolerance)
-    print(f"df after sorting: {df}")
-    # Group times within tolerance
+    df = df.sort_values('Time') # Sort by time of arrival
+
     groups = []
     current_group = [df.iloc[0]]
     for i in range(1, len(df)):
@@ -132,7 +161,7 @@ def dm_filter(df,tolerance):
         return False
 
 
-def snr_plot(groups, dm_tol):
+def snr_plot(df,groups, dm_tol):
     '''
     Plots SNR scatter plot for each group
     Input: List of grouped DataFrames, DM tolerance
@@ -141,23 +170,29 @@ def snr_plot(groups, dm_tol):
     i=0
     for idx, group in enumerate(groups):
         print(f"Group {idx + 1}:")
-        # print(group)
+        
         if not dm_filter(group, dm_tol):
             continue  # Skip this group if DM filtering fails
         i+=1
         fig, ax = plt.subplots(figsize=(5, 4))
         scatter = ax.scatter(group['RA'], group['DEC'], c=group['SNR']/max(group['SNR']), s=50, cmap='plasma', edgecolors='black', alpha=1)
         fig.colorbar(scatter, ax=ax, label='SNR')
-        # cbar.set_label('SNR')
+        
         ax.set_xlabel('Right Ascension')
         ax.set_ylabel('Declination')
         ax.set_title(f"SNR Scatter Plot, T={group['Time'].iloc[0]}")
         ax.set_aspect('auto')
-        # plt.xlim(max(group['RA']), min(group['RA']))
-        # plt.ylim(min(group['DEC']), max(group['DEC']))
+
+        # beamnum = group.loc[group['SNR'].idxmax(), 'BM_Idx']
+        # ax.annotate((beamnum).astype(int), (group.loc[group['SNR'].idxmax(), 'RA'], group.loc[group['SNR'].idxmax(), 'DEC']), 
+        #         textcoords="offset points", xytext=(0, 4), ha='center', fontsize=8, color='blue', weight='bold')
+
+        plt.text(0.5, 0.9, f"Number of candidates {len(group['SNR'])}", fontsize=12, ha='center', va='center', transform=ax.transAxes)
+        plt.xlim(min(df['RA'])-0.0005, max(df['RA'])+0.0005)
+        plt.ylim(min(df['DEC'])-0.0005, max(df['DEC'])+0.0005)
         plt.grid()
         #plt.savefig(f"SNR_Scatter_Plot_{idx + 1}.png")
-        plt.show()
+        #plt.show()
     print("All groups plotted.\n")
     print(f"Total {i} ToA groups passed DM filter.")
     
@@ -168,19 +203,20 @@ def main():
     Output: SNR scatter plot for each group
     '''
     parser = argparse.ArgumentParser(prog=__file__)
-    parser.add_argument("-D", "--dir_path", type=Path, required=True)
+    parser.add_argument("-D1", "--ahdr_dir_path", type=Path, required=True)
+    parser.add_argument("-D2", "--h5_dir_path", type=Path, required=True)
+    parser.add_argument("-bph", "--beam_per_host", type=int)
     parser.add_argument("-Tt", "--time_tol", type=float)
     parser.add_argument("-DMt", "--dm_tol", type=float, default=0.1)
     args = parser.parse_args()
 
-    log.info(f"Plotting SNR Map for h5 files in directory: {args.dir_path}")
-    df = h5_to_dataframe(args.dir_path)
-    print(df)
+    log.info(f"Plotting SNR Map for h5 files in directory: {args.h5_dir_path}")
+    header_df = ra_dec_from_ahdr(args.ahdr_dir_path,args.beam_per_host)
+    df = h5_to_dataframe(args.h5_dir_path,header_df)
     groups = time_filter(df,args.time_tol)
     print(f" Total {len(groups)} different ToA found.")
     print()
-    snr_plot(groups, args.dm_tol)
+    snr_plot(df,groups, args.dm_tol)
 
 if __name__ == "__main__":
     main() 
-
