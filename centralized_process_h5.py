@@ -145,52 +145,46 @@ def dm_filter(df,tolerance):
     Input: DataFrame, tolerance
     Output: Boolean, True if all DM values are approximately equal, False otherwise
     '''
-
+    print(np.var(df['DM']))
     # Check if all values are equal within the tolerance
-    are_values_equal = np.abs(df['DM'].max() - df['DM'].min()) <= tolerance
+    are_values_equal = np.var(df['DM']) <= tolerance
 
     if are_values_equal:
-        print(f"All values in 'DM' are approximately equal within the tolerance of {tolerance}.")
+        print(f"All DM values are within accepted DM distribution of the source.")
         return True
     else:
-        print(f"Values in 'DM' vary beyond the tolerance of {tolerance}.")
+        print(f"DM values the accepted DM distribution. Not likely a burst.")
         return False
 
 
-def snr_plot(df,groups, dm_tol):
+def snr_plot(df,new_df, dm_tol):
     '''
     Plots SNR scatter plot for each group
     Input: List of grouped DataFrames, DM tolerance
     Output: SNR scatter plot for each group
     '''
-    i=0
-    for idx, group in enumerate(groups):
-        print(f"Group {idx + 1}:")
-        
-        if not dm_filter(group, dm_tol):
-            continue  # Skip this group if DM filtering fails
-        i+=1
-        fig, ax = plt.subplots(figsize=(5, 4))
-        scatter = ax.scatter(group['RA'], group['DEC'], c=group['SNR']/max(group['SNR']), s=50, cmap='plasma', edgecolors='black', alpha=1)
-        fig.colorbar(scatter, ax=ax, label='SNR')
-        
-        ax.set_xlabel('Right Ascension')
-        ax.set_ylabel('Declination')
-        ax.set_title(f"SNR Scatter Plot, T={group['Time'].iloc[0]}")
-        ax.set_aspect('auto')
+    if not dm_filter(new_df, dm_tol):
+      raise ValueError ("Failed")# Skip this group if DM filtering fails
+    
+    fig, ax = plt.subplots(figsize=(5, 4))
+    scatter = ax.scatter(new_df['RA'], new_df['DEC'], c=new_df['SNR']/max(new_df['SNR']), s=50, cmap='plasma', edgecolors='black', alpha=1)
+    fig.colorbar(scatter, ax=ax, label='SNR')
+    
+    ax.set_xlabel('Right Ascension')
+    ax.set_ylabel('Declination')
+    ax.set_title(f"SNR Scatter Plot, T={new_df['Time'].iloc[0]}")
+    ax.set_aspect('auto')
 
-        # beamnum = group.loc[group['SNR'].idxmax(), 'BM_Idx']
-        # ax.annotate((beamnum).astype(int), (group.loc[group['SNR'].idxmax(), 'RA'], group.loc[group['SNR'].idxmax(), 'DEC']), 
-        #         textcoords="offset points", xytext=(0, 4), ha='center', fontsize=8, color='blue', weight='bold')
+    # beamnum = group.loc[group['SNR'].idxmax(), 'BM_Idx']
+    # ax.annotate((beamnum).astype(int), (group.loc[group['SNR'].idxmax(), 'RA'], group.loc[group['SNR'].idxmax(), 'DEC']), 
+    #         textcoords="offset points", xytext=(0, 4), ha='center', fontsize=8, color='blue', weight='bold')
 
-        plt.text(0.5, 0.9, f"Number of candidates {len(group['SNR'])}", fontsize=12, ha='center', va='center', transform=ax.transAxes)
-        plt.xlim(min(df['RA'])-0.0005, max(df['RA'])+0.0005)
-        plt.ylim(min(df['DEC'])-0.0005, max(df['DEC'])+0.0005)
-        plt.grid()
-        #plt.savefig(f"SNR_Scatter_Plot_{idx + 1}.png")
-        #plt.show()
-    print("All groups plotted.\n")
-    print(f"Total {i} ToA groups passed DM filter.")
+    plt.text(0.5, 0.9, f"Number of candidates {len(new_df['SNR'])}", fontsize=12, ha='center', va='center', transform=ax.transAxes)
+    plt.xlim(min(df['RA'])-0.0005, max(df['RA'])+0.0005)
+    plt.ylim(min(df['DEC'])-0.0005, max(df['DEC'])+0.0005)
+    plt.grid()
+    #plt.savefig(f"SNR_Scatter_Plot_{idx + 1}.png")
+    plt.show()
     
 def main():
     '''
@@ -202,6 +196,7 @@ def main():
     parser.add_argument("-D1", "--ahdr_dir_path", type=Path, required=True)
     parser.add_argument("-D2", "--h5_dir_path", type=Path, required=True)
     parser.add_argument("-bph", "--beam_per_host", type=int)
+    parser.add_argument("-cbn", "--central_beam_no", type=int)
     parser.add_argument("-Tt", "--time_tol", type=float)
     parser.add_argument("-DMt", "--dm_tol", type=float, default=0.1)
     args = parser.parse_args()
@@ -209,24 +204,8 @@ def main():
     log.info(f"Plotting SNR Map for h5 files in directory: {args.h5_dir_path}")
     header_df = ra_dec_from_ahdr(args.ahdr_dir_path,args.beam_per_host)
     df = h5_to_dataframe(args.h5_dir_path,header_df)
-    groups = time_filter(df,args.time_tol)
-    print(f" Total {len(groups)} different ToA found.")
-    print()
-    snr_plot(df,groups, args.dm_tol)
+    new_df = fetch_highest_snr(df, args.central_beam_no)
+    snr_plot(df,new_df, args.dm_tol)
 
-# if __name__ == "__main__":
-#     main() 
-
-#Test
-ahdr_dir_path = '25Dec2024\header_files'
-beam_per_host = 50
-h5_dir_path = '25Dec2024\h5_files'
-time_tol = 10
-dm_tol = 0.1
-central_beam_no = 100
-
-header_df = ra_dec_from_ahdr(ahdr_dir_path,beam_per_host)
-df = h5_to_dataframe(h5_dir_path,header_df)
-
-new_df = fetch_highest_snr(df, central_beam_no)
-new_df
+if __name__ == "__main__":
+    main() 
