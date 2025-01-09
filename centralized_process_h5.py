@@ -15,9 +15,6 @@ warnings.filterwarnings('ignore')
 logging.basicConfig(level="INFO", datefmt="[%X]", format="%(message)s")
 log = logging.getLogger("snr_plot")
 
-#Input arguments = h5 file directory's path, tolerance value in seconds
-#Flaws - beam numbering might not be req, ra dec conv, dm-time filtering
-
 # Function to get ra dec from ahdr files 
 # [This function WILL NOT BE USED Once Ra Dec in filterbank issue is fixed]
 def ra_dec_from_ahdr(directory_path,beam_per_host):

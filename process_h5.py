@@ -16,9 +16,6 @@ warnings.filterwarnings('ignore')
 logging.basicConfig(level="INFO", datefmt="[%X]", format="%(message)s")
 log = logging.getLogger("snr_plot")
 
-#Input arguments = h5 file directory's path, tolerance value in seconds
-#Flaws - beam numbering might not be req, ra dec conv, dm-time filtering
-
 # Function to get ra dec from ahdr files 
 # [This function WILL NOT BE USED Once Ra Dec in filterbank issue is fixed]
 def ra_dec_from_ahdr(directory_path,beam_per_host):
@@ -193,7 +190,7 @@ def snr_plot(df,groups, dm_tol):
         plt.ylim(min(df['DEC'])-0.0005, max(df['DEC'])+0.0005)
         plt.grid()
         #plt.savefig(f"SNR_Scatter_Plot_{idx + 1}.png")
-        #plt.show()
+        plt.show()
     print("All groups plotted.\n")
     print(f"Total {i} ToA groups passed DM filter.")
     
