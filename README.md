@@ -18,7 +18,7 @@ To run the code, use the following commands:
 
 * For `process_h5.py`:
 
-`python centralized_process_h5.py -D1 ahdr_directory -D2 -h5_directory -bph beam_per_host -Tt Time_tolerance -DMt DM_tolerance` 
+`python process_h5.py -D1 ahdr_directory -D2 -h5_directory -bph beam_per_host -Tt Time_tolerance -DMt DM_tolerance` 
 
 **Arguments:** \
 `D1`: Path to directory containing header files (.ahdr) \
@@ -29,7 +29,7 @@ To run the code, use the following commands:
 
 * For `process_pfd.py`:
 
-`python centralized_process_h5.py -D1 ahdr_directory -D2 -h5_directory -bph beam_per_host -n nbeams` 
+`python process_pfd.py -D1 ahdr_directory -D2 -h5_directory -bph beam_per_host -n nbeams` 
 
 **Arguments:** \
 `D1`: Path to directory containing header files (.ahdr)\
