@@ -6,7 +6,7 @@ import logging
 from matplotlib.ticker import FormatStrFormatter
 from astropy import units as u
 from astropy.coordinates import Angle
-# import h5py
+from tabulate import tabulate
 import os
 from pathlib import Path
 import warnings
@@ -98,26 +98,27 @@ def fold_snr_plot(merged_df, src_name, band, output_dir):
     Plots SNR scatter plot for merged dataframe. Saves the data and folded snr map to output directory.
     '''
     output_path = os.path.join(output_dir, f"SNRMap_{src_name}_B{band}.csv")
-    merged_df.to_csv(output_path, index=False)
+    # merged_df.to_csv(output_path, index=False)
     
     # fold_sm = pd.read_csv(merged_df,delimiter=',')
     merged_df.sort_values(by=['BM-Idx'],ascending=True,inplace=True)
     # merged_df.drop(columns=['I'],inplace=True)
     merged_df.reset_index(drop=True, inplace=True)
 
-    #Highest SNR RA DEC used as source coordinates
-    src_ra = merged_df[merged_df['SNR'] == 1]['RA']
-    src_dec = merged_df[merged_df['SNR'] == 1]['DEC']
-
-    print('Max SNR:',merged_df['SNR'].max(),', Min SNR:',merged_df['SNR'].min())
+    # print('Max SNR:',merged_df['SNR'].max(),', Min SNR:',merged_df['SNR'].min())
     #Shift and renormalization
     merged_df['SNR'] -= min(merged_df['SNR']) #Note negative sign
     merged_df['SNR'] /= max(merged_df['SNR'])
-    print('Renormalizing...')
-    print('Max SNR:',merged_df['SNR'].max(),', Min SNR:',merged_df['SNR'].min())
+    # print('Renormalizing...')
+    # print('Max SNR:',merged_df['SNR'].max(),', Min SNR:',merged_df['SNR'].min())
+   
+    #Highest SNR RA DEC used as source coordinates
+    src_ra = merged_df[merged_df['SNR'] == 1.0]['RA']
+    src_dec = merged_df[merged_df['SNR'] == 1.0]['DEC']
+    src_bm = merged_df[merged_df['SNR'] == 1.0]['BM-Idx']
 
     #SNR Map from data:
-    fig,ax = plt.subplots(figsize=(5,4))
+    fig, ax = plt.subplots(figsize=(5,4), constrained_layout=True)
     scatter = ax.scatter(merged_df['RA'], merged_df['DEC'], c=merged_df['SNR'], s=50, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
     ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
@@ -130,9 +131,9 @@ def fold_snr_plot(merged_df, src_name, band, output_dir):
     plt.savefig(output_path)
     plt.show()
 
-    return merged_df
+    return merged_df, src_ra, src_dec, src_bm
 
-def sim_snr_plot(sim_file, src_name, band, output_dir):
+def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir):
     '''
     Plots SNR scatter plot for simulation data. Saves the simulated snr map to output directory.
     '''
@@ -141,57 +142,76 @@ def sim_snr_plot(sim_file, src_name, band, output_dir):
     sim_sm = pd.read_csv(sim_file, delim_whitespace=True, header=None) 
     sim_sm.columns = ['RA', 'DEC', 'SNR', 'Beam-Idx']
 
-    print('Max:',sim_sm['SNR'].max(),', Min:',sim_sm['SNR'].min())
+    # print('Max:',sim_sm['SNR'].max(),', Min:',sim_sm['SNR'].min())
 
     sim_sm['SNR'] -= min(sim_sm['SNR']) #Shift and renormalization
     sim_sm['SNR'] /= max(sim_sm['SNR'])
-    print('Renormalizing...')
-    print('Max:',sim_sm['SNR'].max(),', Min:',sim_sm['SNR'].min()) #should be 1 and 0
+    # print('Renormalizing...')
+    # print('Max:',sim_sm['SNR'].max(),', Min:',sim_sm['SNR'].min()) #should be 1 and 0
 
     #arcsec to radian 
-    sim_sm['RA'] = sim_sm['RA'].apply(lambda x: (x * u.arcsec).to(u.rad).value)
-    sim_sm['DEC'] = sim_sm['DEC'].apply(lambda x: (x * u.arcsec).to(u.rad).value)
+    # sim_sm['RA'] = sim_sm['RA'].apply(lambda x: (x * u.arcsec).to(u.rad).value)
+    # sim_sm['DEC'] = sim_sm['DEC'].apply(lambda x: (x * u.arcsec).to(u.rad).value)
 
     #Linear transformation (ra dec shift): replace the RA and DEC values with the phase center ra dec values
     # sim_sm['RA'] += pc_ra 
     # sim_sm['DEC'] += pc_dec
 
-    fig,ax = plt.subplots(figsize=(5,4))
-    scatter = ax.scatter(sim_sm['RA'], sim_sm['DEC'], c=sim_sm['SNR'], s=50, cmap='viridis', edgecolors='black', alpha=1)
+    fig, ax = plt.subplots(figsize=(5,4), constrained_layout=True)
+    scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=sim_sm['SNR'], s=50, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
-    # ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
+    ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
     ax.set_xlabel('Right Ascension (rad)')
     ax.set_ylabel('Declination (rad)')
     ax.set_title(f'Simulation SNR Map: {src_name}, Band {band}')
-    # plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.4f'))
+    plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.4f'))
     plt.legend()
 
-    output_path = os.path.join(output_dir, f"SNRMap_{src_name}_B{band}.png")
+    output_path = os.path.join(output_dir, f"SNRMapSIM_{src_name}_B{band}.png")
     plt.savefig(output_path)
     plt.show()
 
     return sim_sm
 
-def residual_plot(fold_sm, sim_sm, src_name, band):
+def residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec, src_bm, band, output_dir):
     '''
     Plots residual scatter plot for simulation and folded data.
     '''
-
+    residual = fold_sm.copy()
     # Residual calculation
-    residual = abs(fold_sm['SNR'] - sim_sm['SNR'])
+    residual['SNR'] = abs(fold_sm['SNR'] - sim_sm['SNR'])
+
+    # Residual Details:
+    res_details = [
+    ["Source Name", src_name],
+    ["Source RA", "{:.7f}".format(src_ra.iloc[0])],
+    ["Source DEC", "{:.7f}".format(src_dec.iloc[0])],
+    ["Source BM Idx", src_bm.iloc[0]],
+    ["Max Residual SNR", f"{"{:.3f}".format(max(residual['SNR']))} (at BM {fold_sm['BM-Idx'][residual['SNR'].idxmax()]})"],
+    ["Min Residual SNR", f"{"{:.3f}".format(min(residual['SNR']))} (at BM {fold_sm['BM-Idx'][residual['SNR'].idxmin()]})"],
+    ["Residual at Source Coord", "{:.3f}".format(residual[residual['BM-Idx'] == src_bm.iloc[0]]['SNR'].iloc[0])],
+    ]
+
+    print("Residaul Details:")
+    print(tabulate(res_details, tablefmt="plane"))
+    
+
     #Residual Plot:
-    print(f"Max residual:\n{round(max(residual),2)}")
-    fig,ax = plt.subplots(figsize=(5,4))
-    scatter = ax.scatter(sim_sm['RA'], sim_sm['DEC'], c=residual, s=50, cmap='viridis', edgecolors='black', alpha=1)
+    
+    fig, ax = plt.subplots(figsize=(5,4), constrained_layout=True)
+    scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=residual['SNR'], s=50, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
-    # ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
+    ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
     ax.set_xlabel('Right Ascension (rad)')
     ax.set_ylabel('Declination (rad)')
     ax.set_title(f'SNR Residual Plot: {src_name}, Band {band}')
     plt.gca().xaxis.set_major_formatter(FormatStrFormatter('%.4f'))
     plt.legend()
-    # plt.savefig(output_dir / f"SNRMapRES_{src_name}_B{band}.png")
+
+    output_path = os.path.join(output_dir, f"SNRMapRES_{src_name}_B{band}.png")
+    plt.savefig(output_path)
     plt.show()
+
 
 # Main function
 def main():
@@ -212,20 +232,18 @@ def main():
         log_level = config.get("log_level", "INFO")
 
         log.info(f"Processing PFD files from {header_dir_path} with {nbeams} beams...")
-        print(f"Logging level set to: {log_level}")
-        
+
         #Main script
         ahdr_data = ra_dec_from_ahdr(header_dir_path,bph)
-        print('done ahdr data')
         new_data = extract_snr(pfd_dir_path,ahdr_data,nbeams, pfd_code)
-        print('done new data')
-        fold_sm = fold_snr_plot(new_data, src_name, band, output_dir_path)
-        print('done fold sm')
-        sim_sm = sim_snr_plot(sim_file_path, src_name, band, output_dir_path)
-        print('done sim sm')
-        residual_plot(fold_sm, sim_sm, src_name, band)
+        log.info(f"Plotting Folded SNR Map...")
+        fold_sm, src_ra, src_dec, src_bm = fold_snr_plot(new_data, src_name, band, output_dir_path)
+        log.info(f"Plotting Simulated SNR Map...")
+        sim_sm = sim_snr_plot(sim_file_path, src_name, src_ra, src_dec, band, output_dir_path)
+        log.info(f"Plotting Residual SNR Map...")
+        residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec ,src_bm, band, output_dir_path)
 
-        print(f"SNR Map data and plot saved to {output_dir_path}")
+        print(f"\nAll SNR Map plots and folded data saved to {output_dir_path}")
     
     except Exception as e:
         print(f"Error: {e}")
