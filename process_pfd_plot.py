@@ -206,11 +206,11 @@ def residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec, src_bm, band, outp
     # Residual Details:
     res_details = [
     ["Source Name", src_name],
-    ["Source RA", "{:.7f}".format(src_ra.iloc[0])],
-    ["Source DEC", "{:.7f}".format(src_dec.iloc[0])],
+    ["Source RA (rad)", "{:.7f}".format(src_ra.iloc[0])],
+    ["Source DEC (rad)", "{:.7f}".format(src_dec.iloc[0])],
     ["Source BM Idx", src_bm.iloc[0]],
-    ["Max Residual SNR", f"{"{:.3f}".format(max(residual['SNR']))} (at BM {fold_sm['BM-Idx'][residual['SNR'].idxmax()]})"],
-    ["Min Residual SNR", f"{"{:.3f}".format(min(residual['SNR']))} (at BM {fold_sm['BM-Idx'][residual['SNR'].idxmin()]})"],
+    ["Max Residual SNR", f"{max(residual['SNR']):.3f} (at BM {fold_sm['BM-Idx'][residual['SNR'].idxmax()]})"],
+    ["Min Residual SNR", f"{min(residual['SNR']):.3f} (at BM {fold_sm['BM-Idx'][residual['SNR'].idxmin()]})"],
     ["Residual at Source Coord", "{:.3f}".format(residual[residual['BM-Idx'] == src_bm.iloc[0]]['SNR'].iloc[0])],
     ]
 
@@ -251,7 +251,7 @@ def main():
         nbeams = config.get("nbeams")
         log_level = config.get("log_level", "INFO")
 
-        log.info(f"Processing PFD files from {header_dir_path} with {nbeams} beams...")
+        log.info(f"Processing PFD files from {pfd_dir_path} with {nbeams} beams...")
 
         #Main script
         ahdr_data = ra_dec_from_ahdr(header_dir_path,bph)
