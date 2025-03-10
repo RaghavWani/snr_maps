@@ -1,0 +1,20 @@
+# Configuration file for the SNR plotting script
+
+#Observation Details-----------------------------------
+src_name: 'B0329+54'      # Source name
+pfd_code: 'PSR_0332+5434' # PFD code
+band: 4                   # Band 
+# src_ra:  0.9379747510   # Source RA in radians
+# src_dec: 0.9541530609   # Source DEC in radians
+# pc_ra:  5.752066        # Pointing center RA in radians
+# pc_dec: 0.706426        # Pointing center DEC in radians
+beam_per_host: 50         # Number of beams per host
+nbeams: 800               # Number of beams
+
+#Data-----------------------------------------------
+header_dir_path: "G:\\SPOTLIGHT\\Multi_beam_spotlight\\4Feb25\\header_files"                # Path to the directory containing the header files
+pfd_dir_path: "G:\\SPOTLIGHT\\Multi_beam_spotlight\\4Feb25\\pfd_files"                      # Path to the directory containing the pfd files
+sim_file_path: "G:\\SPOTLIGHT\\Multi_beam_spotlight\\4Feb25\\ra-dec_centers_B2154+40_b4_20jan_new.txt"   # Path to the file containing the simulation data
+output_dir_path: "G:\\SPOTLIGHT\\Multi_beam_spotlight\\4Feb25"                              # Path to the directory where the snr plot and data will be saved
+
+log_level: "DEBUG"
