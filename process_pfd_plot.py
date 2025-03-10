@@ -13,7 +13,6 @@ import warnings
 import yaml
 
 warnings.filterwarnings('ignore')
-
 logging.basicConfig(level="INFO", datefmt="[%X]", format="%(message)s")
 log = logging.getLogger("snr_plot")
 
@@ -72,7 +71,7 @@ def extract_snr(pfd_dir,ahdr_data,nbeams, pfd_code):
     pfd_data = pd.DataFrame(columns=data_columns)
 
     for i in range(nbeams):
-        filename = f"L{i}{pfd_code}.pfd.bestprof"
+        filename = f"L{i}aa_{pfd_code}.pfd.bestprof"
         file_path = os.path.join(pfd_dir, filename)
         
         if os.path.isfile(file_path) and filename.endswith('.pfd.bestprof'):
@@ -92,7 +91,30 @@ def extract_snr(pfd_dir,ahdr_data,nbeams, pfd_code):
     merged_df = pd.merge(ahdr_data, pfd_data,on='BM-Idx', how='inner')
     return merged_df
 
-# SNR plotting
+def beam_pattern_plot(merged_df,src_name, band,output_dir):
+    '''
+    Plots beam pattern from above merged dataframe. Each beam is annotated with its beam number.
+    Saves the plot to output directory.
+    '''
+    ra = merged_df['RA']
+    dec = merged_df['DEC']
+    beam_numbers = merged_df['BM-Idx']
+    
+    fig, ax = plt.subplots(figsize=(10,8), constrained_layout=True)
+    scatter = ax.plot(ra, dec, 'o',markersize=5, alpha=1) 
+    # Annotate each point with its beam number
+    for i in range(len(ra)):
+        ax.annotate((beam_numbers[i]), (ra[i], dec[i]),
+                    textcoords="offset points", xytext=(0, 4), ha='center', fontsize=6, color='blue', weight='bold')
+    
+    ax.set_xlabel('Right Ascension')
+    ax.set_ylabel('Declination')
+    ax.set_title('Beam Pattern plot')
+    output_path = os.path.join(output_dir, f"BeamPattern_{src_name}_B{band}.png")
+    plt.savefig(output_path)
+    plt.show()
+
+# Folded SNR plotting
 def fold_snr_plot(merged_df, src_name, band, output_dir):
     '''
     Plots SNR scatter plot for merged dataframe. Saves the data and folded snr map to output directory.
@@ -132,7 +154,7 @@ def fold_snr_plot(merged_df, src_name, band, output_dir):
     plt.show()
 
     return merged_df, src_ra, src_dec, src_bm
-
+# Simulated SNR plotting
 def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir):
     '''
     Plots SNR scatter plot for simulation data. Saves the simulated snr map to output directory.
@@ -172,7 +194,7 @@ def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir):
     plt.show()
 
     return sim_sm
-
+# Residual SNR plotting
 def residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec, src_bm, band, output_dir):
     '''
     Plots residual scatter plot for simulation and folded data.
@@ -197,7 +219,6 @@ def residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec, src_bm, band, outp
     
 
     #Residual Plot:
-    
     fig, ax = plt.subplots(figsize=(5,4), constrained_layout=True)
     scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=residual['SNR'], s=50, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
@@ -211,7 +232,6 @@ def residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec, src_bm, band, outp
     output_path = os.path.join(output_dir, f"SNRMapRES_{src_name}_B{band}.png")
     plt.savefig(output_path)
     plt.show()
-
 
 # Main function
 def main():
@@ -236,6 +256,8 @@ def main():
         #Main script
         ahdr_data = ra_dec_from_ahdr(header_dir_path,bph)
         new_data = extract_snr(pfd_dir_path,ahdr_data,nbeams, pfd_code)
+        log.info(f"Plotting Beam Pattern...")
+        beam_pattern_plot(new_data,src_name, band,output_dir_path)
         log.info(f"Plotting Folded SNR Map...")
         fold_sm, src_ra, src_dec, src_bm = fold_snr_plot(new_data, src_name, band, output_dir_path)
         log.info(f"Plotting Simulated SNR Map...")
