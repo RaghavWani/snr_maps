@@ -1,20 +1,21 @@
 # Configuration file for the SNR plotting script
 
 #Observation Details-----------------------------------
-src_name: 'B0329+54'      # Source name
-pfd_code: 'PSR_2157+4017' # PFD code
-band: 4                   # Band 
-# src_ra:  0.9379747510   # Source RA in radians
-# src_dec: 0.9541530609   # Source DEC in radians
-# pc_ra:  5.752066        # Pointing center RA in radians
-# pc_dec: 0.706426        # Pointing center DEC in radians
-beam_per_host: 50         # Number of beams per host
-nbeams: 800               # Number of beams
+src_name: 'J1731-4744'      # Source name
+pfd_code: 'PSR_1731-4744' # PFD code
+band: 5                   # Band
+# src_ra:  2.252324   # Source RA in radians
+# src_dec: -0.790076   # Source DEC in radians
+pc_ra:  4.597341         # Pointing center RA in radians
+pc_dec: -0.833585        # Pointing center DEC in radians
+beam_per_host: 40         # Number of beams per host
+nbeams: 640               # Number of beams
+normal: 0              # 1 for normalized SNR map
 
 #Data-----------------------------------------------
-header_dir_path: "G:\\SPOTLIGHT\\Multi_beam_spotlight\\20Jan25\\header_files"                # Path to the directory containing the header files
-pfd_dir_path: "G:\\SPOTLIGHT\\Multi_beam_spotlight\\20Jan25\\pfd_files"                      # Path to the directory containing the pfd files
-sim_file_path: "G:\\SPOTLIGHT\\Multi_beam_spotlight\\20Jan25\\ra-dec_centers_B2154+40_b4_20jan_new.txt"   # Path to the file containing the simulation data
-output_dir_path: "G:\\SPOTLIGHT\\Multi_beam_spotlight\\20Jan25"                              # Path to the directory where the snr plot and data will be saved
+header_dir_path: "/lustre_data/spotlight/data/48_051_20250419_022012/FilData/J1731-4744_20250419_030508" # Path to the directory containing the header files
+pfd_dir_path: "/lustre_data/spotlight/data/48_051_20250419_022012/FilData/J1731-4744_20250419_030508/FOLDING_OUTPUTS"        # Path to the directory containing the pfd files
+# sim_file_path: "/lustre_archive/gnsmdev/raghav/scripts/ra-dec_centers_B2154+40_b5_20jan_new.txt" # Path to the file containing the simulation data
+output_dir_path: "/lustre_data/spotlight/data/48_051_20250419_022012/FilData/J1731-4744_20250419_030508"  # Path to the directory where the snr plot and data will be saved
 
 log_level: "DEBUG"

@@ -116,28 +116,30 @@ def beam_pattern_plot(merged_df,src_name, band,output_dir):
     plt.show()
 
 # Folded SNR plotting
-def fold_snr_plot(merged_df, src_name, band, output_dir):
+def fold_snr_plot(merged_df, src_name, band, pc_ra,pc_dec, output_dir,normal):
     '''
     Plots SNR scatter plot for merged dataframe. Saves the data and folded snr map to output directory.
     '''
     output_path = os.path.join(output_dir, f"SNRMap_{src_name}_B{band}.csv")
     merged_df.sort_values(by=['BM-Idx'],ascending=True,inplace=True)
     merged_df.reset_index(drop=True, inplace=True)
+    
+    if int(normal) == 1:
+       #Shift and renormalization
+       merged_df['SNR'] -= min(merged_df['SNR']) #Note negative sign
+       merged_df['SNR'] /= max(merged_df['SNR'])
 
-    #Shift and renormalization
-    merged_df['SNR'] -= min(merged_df['SNR']) #Note negative sign
-    merged_df['SNR'] /= max(merged_df['SNR'])
-   
     #Highest SNR RA DEC used as source coordinates
-    src_ra = merged_df[merged_df['SNR'] == 1.0]['RA']
-    src_dec = merged_df[merged_df['SNR'] == 1.0]['DEC']
-    src_bm = merged_df[merged_df['SNR'] == 1.0]['BM-Idx']
+    src_ra = merged_df.loc[merged_df['SNR'].idxmax(),'RA']
+    src_dec = merged_df.loc[merged_df['SNR'].idxmax(),'DEC']
+    src_bm = merged_df.loc[merged_df['SNR'].idxmax(),'BM-Idx']
 
     #SNR Map from data:
-    fig, ax = plt.subplots(figsize=(5,4), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(7.5,5), constrained_layout=True)
     scatter = ax.scatter(merged_df['RA'], merged_df['DEC'], c=merged_df['SNR'], s=50, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
-    ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
+    ax.plot(pc_ra, pc_dec, '*',markersize=8, label="Phase Centre", color='red')
+    ax.plot(src_ra, src_dec, 'o',markersize=2, label=f"Max SNR Beam {src_bm}", color='k')
     ax.set_xlabel('Right Ascension (rad)')
     ax.set_ylabel('Declination (rad)')
     ax.set_title(f'Folded SNR Map: {src_name}, Band {band}')
@@ -150,7 +152,7 @@ def fold_snr_plot(merged_df, src_name, band, output_dir):
     return merged_df, src_ra, src_dec, src_bm
 
 # Simulated SNR plotting
-def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir):
+def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir,normal):
     '''
     Plots SNR scatter plot for simulation data. Saves the simulated snr map to output directory.
     '''
@@ -159,9 +161,11 @@ def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir):
     sim_sm = pd.read_csv(sim_file, delim_whitespace=True, header=None) 
     sim_sm.columns = ['RA', 'DEC', 'SNR', 'Beam-Idx']
 
-    sim_sm['SNR'] -= min(sim_sm['SNR']) #Shift and renormalization
-    sim_sm['SNR'] /= max(sim_sm['SNR'])
-
+    if int(normal) == 1:
+       #Shift and renormalization
+       sim_sm['SNR'] -= min(sim_sm['SNR']) #Note negative sign
+       sim_sm['SNR'] /= max(sim_sm['SNR'])
+    
     #arcsec to radian [REQUIRED IF SIMULATION DATA IS IN ARCSEC]
     # sim_sm['RA'] = sim_sm['RA'].apply(lambda x: (x * u.arcsec).to(u.rad).value)
     # sim_sm['DEC'] = sim_sm['DEC'].apply(lambda x: (x * u.arcsec).to(u.rad).value)
@@ -171,7 +175,7 @@ def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir):
     # sim_sm['DEC'] += pc_dec
 
     #SNR Map from simulation:
-    fig, ax = plt.subplots(figsize=(5,4), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(7.5,5), constrained_layout=True)
     scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=sim_sm['SNR'], s=50, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
     ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
@@ -210,7 +214,7 @@ def residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec, src_bm, band, outp
     print(tabulate(res_details, tablefmt="plane"))
     
     #Residual Plot:
-    fig, ax = plt.subplots(figsize=(5,4), constrained_layout=True)
+    fig, ax = plt.subplots(figsize=(7.5,5), constrained_layout=True)
     scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=residual['SNR'], s=50, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
     ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
@@ -233,7 +237,10 @@ def main():
         src_name = config.get("src_name")
         pfd_code = config.get("pfd_code")
         band = config.get("band")
-
+        pc_ra = config.get("pc_ra")
+        pc_dec = config.get("pc_dec")
+        normal = config.get("normal")
+        
         header_dir_path = config.get("header_dir_path")
         pfd_dir_path = config.get("pfd_dir_path")
         sim_file_path = config.get("sim_file_path")
@@ -252,9 +259,9 @@ def main():
         beam_pattern_plot(new_data,src_name, band,output_dir_path)
 
         log.info(f"Plotting Folded SNR Map...")
-        fold_sm, src_ra, src_dec, src_bm = fold_snr_plot(new_data, src_name, band, output_dir_path)
+        fold_sm, src_ra, src_dec, src_bm = fold_snr_plot(new_data, src_name, band, pc_ra, pc_dec, output_dir_path, normal)
         log.info(f"Plotting Simulated SNR Map...")
-        sim_sm = sim_snr_plot(sim_file_path, src_name, src_ra, src_dec, band, output_dir_path)
+        sim_sm = sim_snr_plot(sim_file_path, src_name, src_ra, src_dec, band, output_dir_path, normal)
         
         log.info(f"Plotting Residual SNR Map...")
         residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec ,src_bm, band, output_dir_path)
