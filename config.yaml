@@ -2,20 +2,21 @@
 
 #Observation Details-----------------------------------
 src_name: 'J1731-4744'      # Source name
-pfd_code: 'PSR_1731-4744' # PFD code
-band: 5                   # Band
+pfd_code: 'PSR_1731-4744'   # PFD code
+band: 5                     # Band
 # src_ra:  2.252324   # Source RA in radians
 # src_dec: -0.790076   # Source DEC in radians
-pc_ra:  4.597341         # Pointing center RA in radians
-pc_dec: -0.833585        # Pointing center DEC in radians
+pc_ra:  4.597341          # Pointing center RA in radians
+pc_dec: -0.833585         # Pointing center DEC in radians
 beam_per_host: 40         # Number of beams per host
 nbeams: 640               # Number of beams
 normal: 0              # 1 for normalized SNR map
+saveif: 1              # 1 for saving folded SNR map data in a csv file
 
 #Data-----------------------------------------------
 header_dir_path: "/lustre_data/spotlight/data/48_051_20250419_022012/FilData/J1731-4744_20250419_030508" # Path to the directory containing the header files
 pfd_dir_path: "/lustre_data/spotlight/data/48_051_20250419_022012/FilData/J1731-4744_20250419_030508/FOLDING_OUTPUTS"        # Path to the directory containing the pfd files
-# sim_file_path: "/lustre_archive/gnsmdev/raghav/scripts/ra-dec_centers_B2154+40_b5_20jan_new.txt" # Path to the file containing the simulation data
+sim_file_path: "/lustre_archive/gnsmdev/raghav/scripts/ra-dec_centers_B2154+40_b5_20jan_new.txt" # Path to the file containing the simulation data
 output_dir_path: "/lustre_data/spotlight/data/48_051_20250419_022012/FilData/J1731-4744_20250419_030508"  # Path to the directory where the snr plot and data will be saved
 
 log_level: "DEBUG"
