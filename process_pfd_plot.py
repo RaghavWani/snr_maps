@@ -262,7 +262,7 @@ def main():
 
         #Main script
         ahdr_data = ra_dec_from_ahdr(header_dir_path,bph)
-        new_data = extract_snr(pfd_dir_path,ahdr_data,nbeams, pfd_code)
+        new_data = extract_snr(pfd_dir_path,ahdr_data,nbeams, src_name)
 
         log.info(f"Plotting Beam Pattern...")
         beam_pattern_plot(new_data,src_name, band,output_dir_path)
