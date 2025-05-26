@@ -60,8 +60,16 @@ def ra_dec_from_ahdr(directory_path, beam_per_host):
     ahdr_data = ahdr_data.apply(lambda col: pd.to_numeric(col, errors='coerce'))
     return ahdr_data
 
+# Function to get PSR code from source name
+def get_psr_code(src_name):
+    match = re.match(r'^[A-Z](\d{4}[+-]\d{4})$', src_name)
+    if match:
+        return f"PSR_{match.group(1)}"
+    else:
+        raise ValueError("Invalid code format")
+    
 # Snr data from pfd files
-def extract_snr(pfd_dir, ahdr_data, nbeams, pfd_code):
+def extract_snr(pfd_dir, ahdr_data, nbeams, src_name):
     '''
     Extracts beam index and snr from folding outputs *.pfd.bestprof files 
     Returns a new dataframe RA, DEC, BM-Idx, BM-SubIdx, SNR
@@ -70,7 +78,7 @@ def extract_snr(pfd_dir, ahdr_data, nbeams, pfd_code):
     pfd_data = pd.DataFrame(columns=data_columns)
 
     for i in range(nbeams):
-        filename = f"L{i}aa_{pfd_code}.pfd.bestprof"
+        filename = f"L{i}aa_{get_psr_code(src_name)}.pfd.bestprof"
         file_path = os.path.join(pfd_dir, filename)
         
         if os.path.isfile(file_path) and filename.endswith('.pfd.bestprof'):
@@ -249,7 +257,6 @@ def main():
         output_dir_path = config.get("output_dir_path")
         bph = config.get("beam_per_host")
         nbeams = config.get("nbeams")
-        log_level = config.get("log_level", "INFO")
 
         log.info(f"Processing PFD files from {pfd_dir_path} with {nbeams} beams...")
 
