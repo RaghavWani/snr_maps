@@ -1,4 +1,4 @@
-# Configuration file for SNR map plotting
+# Configuration file for SNR map plotting (Raw data, Stage-wise SNR maps)
 
 # Observation details ----->
 scan_id: "J0534+2200_20250420_193105"
