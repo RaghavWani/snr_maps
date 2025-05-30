@@ -15,17 +15,13 @@ from datetime import datetime
 
 from candies.base import Candidate
 from spyden import snratio, Template
-from priwo import *
 import ultraplot as uplt
 
 import h5py
-import argparse
 import yaml
 
 import os
 import subprocess
-from pathlib import Path
-import logging
 import warnings
 import shutil
 
@@ -33,8 +29,6 @@ import shutil
 import snr_plt_utils
 
 warnings.filterwarnings('ignore')
-logging.basicConfig(level="INFO", datefmt="[%X]", format="%(message)s")
-log = logging.getLogger("snr_plot")
 
 def make_candysv(traced_h5files_path, cand_h5file_path, observation_path, scan_id):
     # this is the BeamID of the beam wherein the verified burst is in
