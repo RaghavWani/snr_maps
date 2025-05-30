@@ -82,7 +82,7 @@ def ra_dec_from_ahdr(observation_path, scan_id):
                 date_line = lines[-2]
                 ist = " ".join([date_line.strip().split()[-1], isttime_line.strip().split()[-1][:-3]])
                 istdatetime = datetime.strptime(ist, "%d/%m/%Y %H:%M:%S.%f")
-                mjd = snr_plt_utils.getmjd(istdatetime)
+                mjd = getmjd(istdatetime)
                 
                 source_ra = float(source_ra_line.strip().split()[-1])
                 source_dec = float(source_dec_line.strip().split()[-1])
