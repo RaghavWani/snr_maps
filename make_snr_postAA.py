@@ -122,7 +122,7 @@ def main():
     dm_ver, toa_ver = snr_plt_utils.get_burst_dm_toa(cand_h5file_path)    
 
     # computing the dataframe for plotting the SNR maps
-    header_df, source_ra, source_dec, beams_per_node, num_beams = snr_plt_utils.ra_dec_from_ahdr(observation_path, scan_id)
+    header_df, source_ra, source_dec, beams_per_node, num_beams, mjd = snr_plt_utils.ra_dec_from_ahdr(observation_path, scan_id)
     print("Retreived header info!")
     df = snr_plt_utils.grpd_candidates_to_df(observation_path, scan_id, header_df, toa_ver, dm_ver, time_thresh, dm_thresh)
     print("Retrieved candidates from AA!")

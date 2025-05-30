@@ -123,7 +123,7 @@ def main():
     dm_ver, toa_ver = snr_plt_utils.get_burst_dm_toa(cand_h5file_path)
 
     # computing the dataframe for plotting the SNR maps
-    header_df, source_ra, source_dec, beams_per_node, num_beams = snr_plt_utils.ra_dec_from_ahdr(observation_path, scan_id)
+    header_df, source_ra, source_dec, beams_per_node, num_beams, mjd = snr_plt_utils.ra_dec_from_ahdr(observation_path, scan_id)
     df = snr_plt_utils.classification_to_df(observation_path, scan_id, header_df)
     new_df, new_df_2, toA = fetch_highest_snr(header_df, df, source_ra, source_dec, time_thresh, toa_ver)
 
