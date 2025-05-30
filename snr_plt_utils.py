@@ -16,6 +16,10 @@ import h5py
 import ultraplot as uplt
 
 def load_config(config_path="config.yaml"):
+    """
+    Function to load the configuration file
+    """
+
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file '{config_path}' not found. Please create one.")
     
@@ -28,6 +32,10 @@ def load_config(config_path="config.yaml"):
     return config
 
 def getmjd(t: datetime):
+    """
+    Function to convert an IST Date/Time to MJD
+    """
+
     localtz = pytz.timezone("Asia/Kolkata")
     localdt = localtz.localize(t, is_dst=None)
     utcdt = localdt.astimezone(pytz.utc)
@@ -232,6 +240,8 @@ def grpd_candidates_to_df(observation_path, scan_id, header_dataframe, toa_ver, 
     Converts information in all the candidates.csv files present in FRBPipeData/BM* to a dataframe
     Input: directory path of observation, scan identifier (name of the folder inside /FRBPipeData), header dataframe (returned by 'ra_dec_from_ahdr()')
     Returns: DataFrame with columns RA, DEC, BM_Idx, DM, Time, SNR
+
+    NOTE : this function does the DM-Time thresholding before appending to the candidates dataframe
     """
 
     rows = []
@@ -372,6 +382,10 @@ def get_burst_dm_toa(cand_h5file_path):
     return DM_ver, ToA_ver
 
 def plot_beam_pattern(header_df, source_ra, source_dec, output_dir):
+    """
+    Function to plot the observation-specific beam pattern
+    """
+
     central_beam_index = get_central_beam_no(header_df, source_ra, source_dec)
     
     fig = uplt.figure(width=7.5, height=5)

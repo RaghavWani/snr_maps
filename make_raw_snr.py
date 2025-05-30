@@ -21,6 +21,7 @@ import h5py
 import yaml
 
 import os
+from pathlib import Path
 import subprocess
 import warnings
 import shutil
@@ -31,6 +32,10 @@ import snr_plt_utils
 warnings.filterwarnings('ignore')
 
 def make_candysv(traced_h5files_path, cand_h5file_path, observation_path, scan_id):
+    """
+    This function creates the .csv file that candies takes as input to perform feature extraction
+    """
+
     # this is the BeamID of the beam wherein the verified burst is in
     beam_number = int(cand_h5file_path.split("/")[-2][2:])
     beam_str = cand_h5file_path.split("/")[-2]
@@ -64,6 +69,10 @@ def make_candysv(traced_h5files_path, cand_h5file_path, observation_path, scan_i
 
 
 def load_cands_from_h5(traced_h5files_path, cand_h5file_path, numBeams):
+    """
+    This function loads the candidates from all the h5 files after running candies
+    """
+
     cands = []
     cand_h5file_name = cand_h5file_path.split("/")[-1]
     for i in range(numBeams):
@@ -74,6 +83,10 @@ def load_cands_from_h5(traced_h5files_path, cand_h5file_path, numBeams):
 
 
 def snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec):
+    """
+    This function plots the SNR map from the feature extracted .h5 files
+    """
+
     df = pd.merge(header_df, cands, on="BM-Idx")
     # df = df.sort_values("BM-Idx", inplace=True)
     
@@ -126,7 +139,7 @@ def main():
     """
 
     # reading the config file
-    config = snr_plt_utils.load_config("config.yaml")
+    config = snr_plt_utils.load_config("config-h5.yaml")
     scan_id = config.get("scan_id")
     observation_path = config.get("observation_path")
     dm_thresh = config.get("dm_thresh")
@@ -135,7 +148,7 @@ def main():
     traced_h5files_path = config.get("output_dir")
 
     # copying the config file to the output directory
-    shutil.copy("config.yaml", os.path.join(traced_h5files_path, "run_config.yaml"))
+    shutil.copy("config-h5.yaml", os.path.join(traced_h5files_path, "run_config.yaml"))
     
     # computing the dataframe for plotting the SNR maps
     header_df, source_ra, source_dec, beams_per_node, num_beams, mjd = snr_plt_utils.ra_dec_from_ahdr(observation_path, scan_id)

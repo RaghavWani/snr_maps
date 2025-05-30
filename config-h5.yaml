@@ -1,0 +1,15 @@
+# Configuration file for SNR map plotting
+
+# Observation details ----->
+scan_id: "J0534+2200_20250420_193105"
+observation_path: "/lustre_data/spotlight/data/48_051_20250420_191846" # Path to overall observation directory
+dm_thresh: 10
+time_thresh: 0.01
+
+# Provide the .h5 file (stored in FRBPipeData) of the verified burst below (candidate selection is done based on this DM and ToA)
+cand_h5file_path: "/lustre_data/spotlight/data/48_051_20250420_191846/FRBPipeData/J0534+2200_20250420_193105/BM127/MJD60785.5839806_T3.6752589_DM56.70000_SNR33.81694.h5"
+
+# MAIN OUTPUT DIRECTORY -- all o/p files get stored here -- change for every scan!
+output_dir: "/lustre_archive/spotlight/vyaas/snr_maps/outputs/J0534+2200_20250420_193105"
+
+log_level: "DEBUG"
