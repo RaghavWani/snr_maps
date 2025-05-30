@@ -117,7 +117,7 @@ def main():
     cand_h5file_path = config.get("cand_h5file_path")
 
     # copying the config file to the output directory
-    shutil.copy("config-h5.yaml", os.path.join(traced_h5files_path, "run_config.yaml"))    
+    shutil.copy("config-h5.yaml", os.path.join(output_dir, "run_config.yaml"))    
 
     dm_ver, toa_ver = snr_plt_utils.get_burst_dm_toa(cand_h5file_path)    
 
