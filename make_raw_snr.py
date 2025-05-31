@@ -139,7 +139,7 @@ def main():
     """
 
     # reading the config file
-    config = snr_plt_utils.load_config("config-h5.yaml")
+    config = snr_plt_utils.load_config("config.yaml")
     scan_id = config.get("scan_id")
     observation_path = config.get("observation_path")
     dm_thresh = config.get("dm_thresh")
@@ -148,7 +148,7 @@ def main():
     traced_h5files_path = config.get("output_dir")
 
     # copying the config file to the output directory
-    shutil.copy("config-h5.yaml", os.path.join(traced_h5files_path, "run_config.yaml"))
+    shutil.copy("config.yaml", os.path.join(traced_h5files_path, "run_config.yaml"))
     
     # computing the dataframe for plotting the SNR maps
     header_df, source_ra, source_dec, beams_per_node, num_beams, mjd = snr_plt_utils.ra_dec_from_ahdr(observation_path, scan_id)

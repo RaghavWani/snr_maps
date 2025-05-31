@@ -108,7 +108,7 @@ def main():
     """
 
     # reading the config file
-    config = snr_plt_utils.load_config("config-h5.yaml")
+    config = snr_plt_utils.load_config("config.yaml")
     scan_id = config.get("scan_id")
     observation_path = config.get("observation_path")
     dm_thresh = config.get("dm_thresh")
@@ -117,7 +117,7 @@ def main():
     cand_h5file_path = config.get("cand_h5file_path")
 
     # copying the config file to the output directory
-    shutil.copy("config-h5.yaml", os.path.join(output_dir, "run_config.yaml"))    
+    shutil.copy("config.yaml", os.path.join(output_dir, "run_config.yaml"))    
 
     dm_ver, toa_ver = snr_plt_utils.get_burst_dm_toa(cand_h5file_path)    
 
