@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from astropy import units as u
-from astropy.coordinates import Angle
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import Angle, SkyCoord, TETE
 from datetime import datetime
+from astropy.time import Time
 
 import ultraplot as uplt
 
@@ -67,7 +67,7 @@ def dm_filter(df, tolerance, dm_ver):
     print("DM filtering done!")
     return dm_fil_df
 
-def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, output_dir):
+def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, output_dir, mjd, cand_ra_dec):
     """
     Plots SNR scatter plot for each group
     Input: List of grouped DataFrames, DM tolerance
@@ -78,13 +78,18 @@ def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, 
     central_beam_index = snr_plt_utils.get_central_beam_no(header_df, source_ra, source_dec)
     snrmaxsp = new_df[new_df["SNR"] == new_df["SNR"].max()]
     print(snrmaxsp)
+
+    obstime = Time(mjd, format="mjd")
+    coords = SkyCoord(cand_ra_dec, frame="icrs")
+    tc = coords.transform_to(TETE(obstime=obstime))
+
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     #scatter_header_df = ax.scatter(header_df['RA'], header_df['DEC'], vmin=0.0, c=pd.Series(0, index=header_df['RA'].index), cmap='viridis', edgecolor="black", label="__nolegend__", markersize=150)
     scatter = ax.scatter(new_df['RA'], new_df['DEC'], vmin=0.0, c=new_df['SNR'], cmap='viridis', edgecolor='black', label="Beams", markersize=150)
     ax.scatter(snrmaxsp["RA"], snrmaxsp["DEC"], c="red", markersize=50, label=f"Beam with maximum SNR")
     ax.scatter(header_df[header_df['BM-Idx'] == central_beam_index]["RA"], header_df[header_df['BM-Idx'] == central_beam_index]["DEC"], c="red", marker="*", markersize=50, label="Phase center")
-    #ax.scatter(hdrs[0]["ra"], hdrs[0]["dec"], c="red", marker="*", markersize=300, label="Phase center")
+    ax.scatter(tc.ra.rad, tc.dec.rad, c="grey", marker=".", markersize=50, label="Precessed coords")
     ax.colorbar(scatter, label='SNR')
     ax.legend(loc="top")
     ax.format(suptitle=f"Single Pulse SNR Map (Post-AA), T={toA}")   
@@ -115,6 +120,7 @@ def main():
     time_thresh = config.get("time_thresh")
     output_dir = config.get("output_dir")
     cand_h5file_path = config.get("cand_h5file_path")
+    cand_ra_dec = config.get("cand_ra_dec")
 
     # copying the config file to the output directory
     shutil.copy("config.yaml", os.path.join(output_dir, "run_config.yaml"))    
@@ -130,7 +136,7 @@ def main():
     print("Retrieved all beams with known pulse! -- plotting SNR")
 
     # plotting the SNR map
-    snr_plot(header_df, df, new_df_2, dm_thresh, toA, dm_ver, source_ra, source_dec, output_dir)
+    snr_plot(header_df, df, new_df_2, dm_thresh, toA, dm_ver, source_ra, source_dec, output_dir, mjd, cand_ra_dec)
 
 if __name__ == "__main__":
     main()

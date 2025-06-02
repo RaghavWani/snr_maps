@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from astropy import units as u
-from astropy.coordinates import Angle
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, TETE, Angle
+from astropy.time import Time
 from datetime import datetime
 
 from candies.base import Candidate
@@ -82,7 +82,7 @@ def load_cands_from_h5(traced_h5files_path, cand_h5file_path, numBeams):
     return cands
 
 
-def snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec):
+def snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec, mjd, cand_ra_dec):
     """
     This function plots the SNR map from the feature extracted .h5 files
     """
@@ -121,9 +121,14 @@ def snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec):
     df["AMPsp"] = candamps
     snrmaxsp = df[df["SNRsp"] == df["SNRsp"].max()]
     
+    obstime = Time(mjd, format="mjd")
+    coords = SkyCoord(cand_ra_dec, frame="icrs")
+    tc = coords.transform_to(TETE(obstime=obstime))
+
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     sm = ax.scatter(df["RA"], df["DEC"], vmin=0.0, c=df["SNRsp"], cmap="viridis", edgecolor="black", label="Beams", markersize=150)
+    ax.scatter(tc.ra.rad, tc.dec.rad, c="grey", marker=".", markersize=50, label="Precessed coords")
     ax.scatter(snrmaxsp["RA"], snrmaxsp["DEC"], c="red", markersize=50, label=f"Beam with maximum SNR")
     ax.scatter(source_ra, source_dec, c="red", marker="*", markersize=50, label="Phase center")
     ax.colorbar(sm)
@@ -146,6 +151,7 @@ def main():
     time_thresh = config.get("time_thresh")
     cand_h5file_path = config.get("cand_h5file_path")
     traced_h5files_path = config.get("output_dir")
+    cand_ra_dec = config.get("cand_ra_dec")
 
     # copying the config file to the output directory
     shutil.copy("config.yaml", os.path.join(traced_h5files_path, "run_config.yaml"))
@@ -170,7 +176,7 @@ def main():
         print("..make_h5_candies.. script failed with error:", e)
     
     cands = load_cands_from_h5(traced_h5files_path, cand_h5file_path, num_beams)
-    snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec)
+    snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec, mjd, cand_ra_dec)
 
 if __name__ == "__main__":
     main()
