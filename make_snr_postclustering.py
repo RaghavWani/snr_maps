@@ -103,12 +103,6 @@ def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, 
     ax.set_ylabel('Declination')
     ax.set_aspect('auto')
 
-    # beamnum = group.loc[group['SNR'].idxmax(), 'BM_Idx']
-    # ax.annotate((beamnum).astype(int), (group.loc[group['SNR'].idxmax(), 'RA'], group.loc[group['SNR'].idxmax(), 'DEC']), 
-    #         textcoords="offset points", xytext=(0, 4), ha='center', fontsize=8, color='blue', weight='bold')
-
-    # plt.text(0.5, 0.9, f"Number of candidates {len(new_df['SNR'])}", fontsize=12, ha='center', va='top', transform=ax.transAxes)
-    #plt.savefig(f"SNR_Scatter_Plot_{idx + 1}.png")
     fig.savefig(os.path.join(output_dir, "SNR_postclustering.png"), dpi=150)
 
 def main():
