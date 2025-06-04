@@ -120,15 +120,20 @@ def snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec, mjd, 
     df["SNRsp"] = candsnrs
     df["AMPsp"] = candamps
     snrmaxsp = df[df["SNRsp"] == df["SNRsp"].max()]
-    
-    obstime = Time(mjd, format="mjd")
-    coords = SkyCoord(cand_ra_dec, frame="icrs")
-    tc = coords.transform_to(TETE(obstime=obstime))
 
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     sm = ax.scatter(df["RA"], df["DEC"], vmin=0.0, c=df["SNRsp"], cmap="viridis", edgecolor="black", label="Beams", markersize=150)
-    ax.scatter(tc.ra.rad, tc.dec.rad, c="grey", marker=".", markersize=50, label="Precessed coords")
+    
+    if cand_ra_dec:
+        # plotting the precessed coords
+        obstime = Time(mjd, format="mjd")
+        coords = SkyCoord(cand_ra_dec, frame="icrs")
+        tc = coords.transform_to(TETE(obstime=obstime))
+        ax.scatter(tc.ra.rad, tc.dec.rad, c="grey", marker=".", markersize=50, label="Precessed coords")
+    else:
+        print("Not plotting precessed coords~!")
+
     ax.scatter(snrmaxsp["RA"], snrmaxsp["DEC"], c="red", markersize=50, label=f"Beam with maximum SNR")
     ax.scatter(source_ra, source_dec, c="red", marker="*", markersize=50, label="Phase center")
     ax.colorbar(sm)

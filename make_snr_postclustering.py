@@ -79,18 +79,23 @@ def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, 
 
     central_beam_index = snr_plt_utils.get_central_beam_no(header_df, source_ra, source_dec)
     snrmaxsp = new_df[new_df["SNR"] == new_df["SNR"].max()]
-    
-    obstime = Time(mjd, format="mjd")
-    coords = SkyCoord(cand_ra_dec, frame="icrs")
-    tc = coords.transform_to(TETE(obstime=obstime))
 
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     #scatter_header_df = ax.scatter(header_df['RA'], header_df['DEC'], vmin=0.0, c=pd.Series(0, index=header_df['RA'].index), cmap='viridis', edgecolor="black", label="__nolegend__", markersize=150)
     scatter = ax.scatter(new_df['RA'], new_df['DEC'], vmin=0.0, c=new_df['SNR'], cmap='viridis', edgecolor='black', label="Beams", markersize=150)
+    
+    if cand_ra_dec:
+        # plotting the precessed coords
+        obstime = Time(mjd, format="mjd")
+        coords = SkyCoord(cand_ra_dec, frame="icrs")
+        tc = coords.transform_to(TETE(obstime=obstime))
+        ax.scatter(tc.ra.rad, tc.dec.rad, c="grey", marker=".", markersize=50, label="Precessed coords")
+    else:
+        print("Not plotting precessed coords~!")
+
     ax.scatter(snrmaxsp["RA"], snrmaxsp["DEC"], c="red", markersize=50, label=f"Beam with maximum SNR")
     ax.scatter(header_df[header_df['BM-Idx'] == central_beam_index]["RA"], header_df[header_df['BM-Idx'] == central_beam_index]["DEC"], c="red", marker="*", markersize=50, label="Phase center")
-    ax.scatter(tc.ra.rad, tc.dec.rad, c="grey", marker=".", markersize=50, label="Precessed coords")
     ax.colorbar(scatter, label='SNR')
     ax.legend(loc="top")
     ax.format(suptitle=f"Single Pulse SNR Map (Post-Clustering), T={toA}")   
