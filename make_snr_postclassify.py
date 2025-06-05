@@ -4,6 +4,9 @@ import pandas as pd
 
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord, TETE
+from astropy.wcs import WCS
+from astropy.wcs.utils import skycoord_to_pixel
+from scipy.ndimage import gaussian_filter
 from astropy.time import Time
 from datetime import datetime
 
@@ -78,12 +81,12 @@ def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, 
 
     central_beam_index = snr_plt_utils.get_central_beam_no(header_df, source_ra, source_dec)
     snrmaxsp = new_df[new_df["SNR"] == new_df["SNR"].max()]
-    print(snrmaxsp)
+    # print(snrmaxsp)
 
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     #scatter_header_df = ax.scatter(header_df['RA'], header_df['DEC'], vmin=0.0, c=pd.Series(0, index=header_df['RA'].index), cmap='viridis', edgecolor="black", label="__nolegend__", markersize=150)
-    scatter = ax.scatter(new_df['RA'], new_df['DEC'], vmin=0.0, c=new_df['SNR'], cmap='viridis', edgecolor='black', label="Beams", markersize=150)
+    scatter = ax.scatter(new_df['RA'], new_df['DEC'], vmin=0.0, c=new_df['SNR'], cmap='viridis', edgecolor='black', label="__nolegend__", markersize=150)
     
     if cand_ra_dec:
         # plotting the precessed coords
@@ -104,6 +107,68 @@ def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, 
     ax.set_aspect('auto')
 
     fig.savefig(os.path.join(output_dir, "SNR_postclassify.png"), dpi=150)
+
+def spatial_snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, output_dir, mjd, cand_ra_dec):
+    new_df = dm_filter(new_df, dm_tol, dm_ver)
+    central_beam_index = snr_plt_utils.get_central_beam_no(header_df, source_ra, source_dec)
+    
+    n_pix = 256
+
+    ra_min, ra_max = new_df["RA"].min(), new_df["RA"].max()
+    dec_min, dec_max = new_df["DEC"].min(), new_df["DEC"].max()
+    ra_min_deg, ra_max_deg = np.degrees([ra_min, ra_max])
+    dec_min_deg, dec_max_deg = np.degrees([dec_min, dec_max])
+    
+    ra_grid = np.linspace(ra_min, ra_max, n_pix)
+    dec_grid = np.linspace(dec_min, dec_max, n_pix)
+
+    snr_image = np.zeros((n_pix, n_pix))
+
+    w = WCS(naxis=2)
+    w.wcs.crpix = [n_pix // 2, n_pix // 2]
+    w.wcs.cdelt = [(ra_max_deg - ra_min_deg) / n_pix, (dec_max_deg - dec_min_deg) / n_pix]
+    w.wcs.crval = [(ra_max_deg + ra_min_deg) / 2, (dec_max_deg + dec_min_deg) / 2]
+    w.wcs.ctype = ["RA---TAN", "DEC--TAN"]
+
+    kernel_sigma_pix = 8.0  # scale with SNR if desired
+
+    for _, row in new_df.iterrows():
+        coord = SkyCoord(ra=row["RA"] * u.rad, dec=row["DEC"] * u.rad)
+        x_pix, y_pix = skycoord_to_pixel(coord, w)
+    
+        x_pix = int(np.round(x_pix))
+        y_pix = int(np.round(y_pix))
+    
+        if 0 <= x_pix < n_pix and 0 <= y_pix < n_pix:
+            temp_image = np.zeros_like(snr_image)
+            temp_image[y_pix, x_pix] = row["SNR"]
+    
+            smoothed = gaussian_filter(temp_image, sigma=kernel_sigma_pix)
+            snr_image += smoothed
+    
+    fig = uplt.figure(width=7.5, height=5)
+    ax = fig.subplot()
+    skysnr = ax.imshow(snr_image, origin="lower", cmap="viridis", extent=[ra_min, ra_max, dec_min, dec_max])
+    ax.scatter(header_df[header_df['BM-Idx'] == central_beam_index]["RA"], header_df[header_df['BM-Idx'] == central_beam_index]["DEC"], c="red", marker="*", markersize=25, label="Phase center")
+    
+    if cand_ra_dec:
+        # plotting the precessed coords
+        obstime = Time(mjd, format="mjd")
+        coords = SkyCoord(cand_ra_dec, frame="icrs")
+        tc = coords.transform_to(TETE(obstime=obstime))
+        ax.scatter(tc.ra.rad, tc.dec.rad, c="grey", marker=".", markersize=50, label="Precessed coords")
+    else:
+        print("Not plotting precessed coords~!")
+    
+    ax.colorbar(skysnr, label='SNR')
+    ax.legend(loc="top")
+    ax.format(suptitle=f"Single Pulse Sky-SNR Map (Post-Classify), T={toA}")
+    ax.set_xlabel('Right Ascension')
+    ax.set_ylabel('Declination')
+    ax.set_aspect('auto')
+
+    fig.savefig(os.path.join(output_dir, "SNR_postclassify_skymap.png"), dpi=150)
+
 
 def main():
     """
@@ -134,6 +199,7 @@ def main():
 
     # plotting the SNR map
     snr_plot(header_df, df, new_df_2, dm_thresh, toA, dm_ver, source_ra, source_dec, output_dir, mjd, cand_ra_dec)
+    spatial_snr_plot(header_df, df, new_df_2, dm_thresh, toA, dm_ver, source_ra, source_dec, output_dir, mjd, cand_ra_dec)
 
 if __name__ == "__main__":
     main()
