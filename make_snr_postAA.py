@@ -117,7 +117,7 @@ def spatial_snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, sour
     dec_min, dec_max = new_df["DEC"].min(), new_df["DEC"].max()
     
     # adding artificial padding if necessary
-    eps = 1e-6  # ~0.2 arcsec in radians
+    eps = 1e-3  # ~0.2 arcsec in radians
 
     if np.isclose(ra_max, ra_min):
         ra_min -= eps / 2

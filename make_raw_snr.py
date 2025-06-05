@@ -192,7 +192,7 @@ def spatial_snr_plot(header_df, cands, traced_h5files_path, source_ra, source_de
     dec_min, dec_max = df["DEC"].min(), df["DEC"].max()
 
     # adding artificial padding if necessary
-    eps = 1e-6  # ~0.2 arcsec in radians
+    eps = 1e-3  # ~0.2 arcsec in radians
 
     if np.isclose(ra_max, ra_min):
         ra_min -= eps / 2
