@@ -190,9 +190,21 @@ def spatial_snr_plot(header_df, cands, traced_h5files_path, source_ra, source_de
 
     ra_min, ra_max = df["RA"].min(), df["RA"].max()
     dec_min, dec_max = df["DEC"].min(), df["DEC"].max()
+
+    # adding artificial padding if necessary
+    eps = 1e-6  # ~0.2 arcsec in radians
+
+    if np.isclose(ra_max, ra_min):
+        ra_min -= eps / 2
+        ra_max += eps / 2
+
+    if np.isclose(dec_max, dec_min):
+        dec_min -= eps / 2
+        dec_max += eps / 2
+
     ra_min_deg, ra_max_deg = np.degrees([ra_min, ra_max])
     dec_min_deg, dec_max_deg = np.degrees([dec_min, dec_max])
-    
+
     ra_grid = np.linspace(ra_min, ra_max, n_pix)
     dec_grid = np.linspace(dec_min, dec_max, n_pix)
 
