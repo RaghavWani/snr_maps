@@ -63,7 +63,7 @@ def ra_dec_from_ahdr(observation_path, scan_id):
     # list all .ahdr files in the given directory
     ahdr_files = [os.path.join(observation_path, "BeamData", file) for file in os.listdir(os.path.join(observation_path, "BeamData")) if (file.endswith(".ahdr") and file.startswith(scan_id))]
     if not ahdr_files:
-        print(f"No .ahdr files found in directory: {ahdr_dir_path}")
+        print(f"No .ahdr files found in BeamData directory!")
         return None
 
     for file in ahdr_files:
