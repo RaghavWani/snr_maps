@@ -388,10 +388,16 @@ def plot_beam_pattern(header_df, source_ra, source_dec, output_dir):
 
     central_beam_index = get_central_beam_no(header_df, source_ra, source_dec)
     
+    # generating consistent x and y bounds
+    window_rad = 0.00005  # adjust as needed
+    ra_min, ra_max = header_df["RA"].min() - window_rad, header_df["RA"].max() + window_rad
+    dec_min, dec_max = header_df["DEC"].min() - window_rad, header_df["DEC"].max() + window_rad
+
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     for i, row in header_df.iterrows():
         ax.text(row["RA"] - 1.5e-5, row["DEC"] - 1.5e-5, int(row["BM-Idx"]), transform="data", size=5)
     ax.scatter(header_df["RA"], header_df["DEC"], facecolor="none", edgecolor="black", markersize=100)
     ax.scatter(header_df[header_df['BM-Idx'] == central_beam_index]["RA"], header_df[header_df['BM-Idx'] == central_beam_index]["DEC"], c="red", marker="*", markersize=50, label="Phase center")
+    ax.format(xlim=(ra_min, ra_max), ylim=(dec_min, dec_max), suptitle=f"Beam Pattern Map")
     fig.savefig(os.path.join(output_dir, "SNR_BeamPattern.png"), dpi=150)

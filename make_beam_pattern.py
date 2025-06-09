@@ -10,7 +10,7 @@ def main():
     observation_path = config.get("observation_path")
     output_dir = config.get("output_dir")
 
-    header_df, source_ra, source_dec, beams_per_node, num_beams = snr_plt_utils.ra_dec_from_ahdr(observation_path, scan_id)
+    header_df, source_ra, source_dec, beams_per_node, num_beams, mjd = snr_plt_utils.ra_dec_from_ahdr(observation_path, scan_id)
 
     snr_plt_utils.plot_beam_pattern(header_df, source_ra, source_dec, output_dir)
 
