@@ -125,6 +125,11 @@ def snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec, mjd, 
     df["AMPsp"] = candamps
     snrmaxsp = df[df["SNRsp"] == df["SNRsp"].max()]
 
+    # generating consistent x and y bounds
+    window_rad = 0.00005  # adjust as needed
+    ra_min, ra_max = header_df["RA"].min() - window_rad, header_df["RA"].max() + window_rad
+    dec_min, dec_max = header_df["DEC"].min() - window_rad, header_df["DEC"].max() + window_rad
+
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     sm = ax.scatter(df["RA"], df["DEC"], vmin=0.0, c=df["SNRsp"], cmap="viridis", edgecolor="black", label="__nolegend__", markersize=150)
@@ -142,7 +147,7 @@ def snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec, mjd, 
     ax.scatter(source_ra, source_dec, c="red", marker="*", markersize=50, label="Phase center")
     ax.colorbar(sm)
     ax.legend(loc="top")
-    ax.format(suptitle="Single Pulse SNR Map (Raw Data)")
+    ax.format(xlim=(ra_min, ra_max), ylim=(dec_min, dec_max), suptitle="Single Pulse SNR Map (Raw Data)")
     fig.savefig(os.path.join(traced_h5files_path, "rSNR.png"), dpi=150)
     uplt.show()
 
@@ -189,19 +194,13 @@ def spatial_snr_plot(header_df, cands, traced_h5files_path, source_ra, source_de
     
     n_pix = 256
 
-    ra_min, ra_max = df["RA"].min(), df["RA"].max()
-    dec_min, dec_max = df["DEC"].min(), df["DEC"].max()
+    #ra_min, ra_max = df["RA"].min(), df["RA"].max()
+    #dec_min, dec_max = df["DEC"].min(), df["DEC"].max()
 
-    # adding artificial padding if necessary
-    eps = 1e-3  # ~0.2 arcsec in radians
-
-    if np.isclose(ra_max, ra_min):
-        ra_min -= eps / 2
-        ra_max += eps / 2
-
-    if np.isclose(dec_max, dec_min):
-        dec_min -= eps / 2
-        dec_max += eps / 2
+    # generating consistent x and y bounds
+    window_rad = 0.00005  # adjust as needed
+    ra_min, ra_max = header_df["RA"].min() - window_rad, header_df["RA"].max() + window_rad
+    dec_min, dec_max = header_df["DEC"].min() - window_rad, header_df["DEC"].max() + window_rad
 
     ra_min_deg, ra_max_deg = np.degrees([ra_min, ra_max])
     dec_min_deg, dec_max_deg = np.degrees([dec_min, dec_max])
@@ -249,7 +248,7 @@ def spatial_snr_plot(header_df, cands, traced_h5files_path, source_ra, source_de
     
     ax.colorbar(skysnr, label='SNR')
     ax.legend(loc="top")
-    ax.format(suptitle=f"Single Pulse Sky-SNR Map (Raw Data)") 
+    ax.format(xlim=(ra_min, ra_max), ylim=(dec_min, dec_max), suptitle=f"Single Pulse Sky-SNR Map (Raw Data)") 
     ax.set_xlabel('Right Ascension')
     ax.set_ylabel('Declination')
     ax.set_aspect('auto')
