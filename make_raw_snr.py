@@ -281,6 +281,10 @@ def main():
 
     # making the candydates.csv as an input to candies make
     make_candysv(traced_h5files_path, cand_h5file_path, observation_path, scan_id)
+    
+    h5_files = list(Path(traced_h5files_path).rglob("*.h5"))
+    if h5_files:
+        raise RuntimeError(f"Found {len(h5_files)} .h5 file(s) in {traced_h5files_path}. Aborting script ~ CLEAR O/P DIRECTORY BEFORE RUNNING CANDIES MAKE")
 
     # running candies make on all the filterbank files for the scan provided using a bash script
     bash_script_path = str((Path.cwd() / "make_h5_candies.sh").resolve())
