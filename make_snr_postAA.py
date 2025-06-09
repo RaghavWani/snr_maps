@@ -82,6 +82,11 @@ def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, 
     snrmaxsp = new_df[new_df["SNR"] == new_df["SNR"].max()]
     print(snrmaxsp)
 
+    # generating consistent x and y bounds
+    window_rad = 0.00005  # adjust as needed
+    ra_min, ra_max = header_df["RA"].min() - window_rad, header_df["RA"].max() + window_rad
+    dec_min, dec_max = header_df["DEC"].min() - window_rad, header_df["DEC"].max() + window_rad
+
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     #scatter_header_df = ax.scatter(header_df['RA'], header_df['DEC'], vmin=0.0, c=pd.Series(0, index=header_df['RA'].index), cmap='viridis', edgecolor="black", label="__nolegend__", markersize=150)
@@ -100,7 +105,7 @@ def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, 
     ax.scatter(header_df[header_df['BM-Idx'] == central_beam_index]["RA"], header_df[header_df['BM-Idx'] == central_beam_index]["DEC"], c="red", marker="*", markersize=50, label="Phase center")
     ax.colorbar(scatter, label='SNR')
     ax.legend(loc="top")
-    ax.format(suptitle=f"Single Pulse SNR Map (Post-AA), T={toA}")   
+    ax.format(xlim=(ra_min, ra_max), ylim=(dec_min, dec_max), suptitle=f"Single Pulse SNR Map (Post-AA), T={toA}")
     ax.set_xlabel('Right Ascension')
     ax.set_ylabel('Declination')
     ax.set_aspect('auto')
@@ -113,19 +118,13 @@ def spatial_snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, sour
     
     n_pix = 256
 
-    ra_min, ra_max = new_df["RA"].min(), new_df["RA"].max()
-    dec_min, dec_max = new_df["DEC"].min(), new_df["DEC"].max()
+    #ra_min, ra_max = new_df["RA"].min(), new_df["RA"].max()
+    #dec_min, dec_max = new_df["DEC"].min(), new_df["DEC"].max()
     
-    # adding artificial padding if necessary
-    eps = 1e-3  # ~0.2 arcsec in radians
-
-    if np.isclose(ra_max, ra_min):
-        ra_min -= eps / 2
-        ra_max += eps / 2
-
-    if np.isclose(dec_max, dec_min):
-        dec_min -= eps / 2
-        dec_max += eps / 2
+    # generating consistent x and y bounds
+    window_rad = 0.00005  # adjust as needed
+    ra_min, ra_max = header_df["RA"].min() - window_rad, header_df["RA"].max() + window_rad
+    dec_min, dec_max = header_df["DEC"].min() - window_rad, header_df["DEC"].max() + window_rad
 
     ra_min_deg, ra_max_deg = np.degrees([ra_min, ra_max])
     dec_min_deg, dec_max_deg = np.degrees([dec_min, dec_max])
@@ -173,7 +172,7 @@ def spatial_snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, sour
     
     ax.colorbar(skysnr, label='SNR')
     ax.legend(loc="top")
-    ax.format(suptitle=f"Single Pulse Sky-SNR Map (Post-AA), T={toA}")
+    ax.format(xlim=(ra_min, ra_max), ylim=(dec_min, dec_max), suptitle=f"Single Pulse Sky-SNR Map (Post-AA), T={toA}")
     ax.set_xlabel('Right Ascension')
     ax.set_ylabel('Declination')
     ax.set_aspect('auto')
