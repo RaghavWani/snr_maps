@@ -59,7 +59,8 @@ def make_candysv(traced_h5files_path, cand_h5file_path, observation_path, scan_i
     
     # removing the redundant "BMx" part in the directory as .fil files are directly stored in the /FilData
     parts = candysv["file"].values[0].strip().split("/")
-    parts.remove(beam_str)
+    if beam_str in parts:
+        parts.remove(beam_str)
     new_path = "/".join(parts)
     candysv.at[0, "file"] = new_path
 
