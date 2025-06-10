@@ -1,6 +1,6 @@
-# Configuration file for the SNR plotting script
+# I. CONFIG FOR FOLDED SNR PLOTTING SCRIPT
 
-#Observation Details-----------------------------------
+# Observation Details ------>
 src_name: 'J1731-4744'      # Source name
 band: 5                     # Band
 # src_ra:  2.252324   # Source RA in radians
@@ -12,8 +12,26 @@ nbeams: 640               # Number of beams
 normal: 0              # 1 for normalized SNR map
 saveif: 1              # 1 for saving folded SNR map data in a csv file
 
-#Data-----------------------------------------------
 header_dir_path: "/lustre_data/spotlight/data/48_051_20250419_022012/FilData/J1731-4744_20250419_030508" # Path to the directory containing the header files
 pfd_dir_path: "/lustre_data/spotlight/data/48_051_20250419_022012/FilData/J1731-4744_20250419_030508/FOLDING_OUTPUTS"        # Path to the directory containing the pfd files
 sim_file_path: "/lustre_archive/gnsmdev/raghav/scripts/ra-dec_centers_B2154+40_b5_20jan_new.txt" # Path to the file containing the simulation data
 output_dir_path: "/lustre_data/spotlight/data/48_051_20250419_022012/FilData/J1731-4744_20250419_030508"  # Path to the directory where the snr plot and data will be saved
+
+# II. CONFIG FOR SNR MAPS FROM RAW DATA, STAGE-WISE SNR MAPS
+
+# Observation details ----->
+scan_id: "J0534+2200_20250420_193105"
+observation_path: "/lustre_data/spotlight/data/48_051_20250420_191846" # Path to overall observation directory
+dm_thresh: 10
+time_thresh: 0.01
+
+# Provide the .h5 file (stored in FRBPipeData) of the verified burst below (candidate selection is done based on this DM and ToA)
+cand_h5file_path: "/lustre_data/spotlight/data/48_051_20250420_191846/FRBPipeData/J0534+2200_20250420_193105/BM127/MJD60785.5839806_T3.6752589_DM56.70000_SNR33.81694.h5"
+
+# Provide the current RA, DEC of the source being observed (from ATNF, in the below format)
+cand_ra_dec: "05h34m31.93357s +22d00m52.1927s"
+
+# MAIN OUTPUT DIRECTORY for RAW/STAGEWISE SNR MAPS -- all o/p files get stored here -- change for every scan!
+output_dir: "/lustre_archive/spotlight/vyaas/snr_maps/outputs/J0534+2200_20250420_193105"
+
+log_level: "DEBUG"
