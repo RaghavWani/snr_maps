@@ -125,6 +125,9 @@ def snr_plot(header_df, cands, traced_h5files_path, source_ra, source_dec, mjd, 
     df["AMPsp"] = candamps
     snrmaxsp = df[df["SNRsp"] == df["SNRsp"].max()]
 
+    # normalizing SNR
+    df["SNRsp"] = (df["SNRsp"] - df["SNRsp"].min()) / (df["SNRsp"].max() - df["SNRsp"].min())
+
     # generating consistent x and y bounds
     window_rad = 0.00005  # adjust as needed
     ra_min, ra_max = header_df["RA"].min() - window_rad, header_df["RA"].max() + window_rad
@@ -231,6 +234,9 @@ def spatial_snr_plot(header_df, cands, traced_h5files_path, source_ra, source_de
     
             smoothed = gaussian_filter(temp_image, sigma=kernel_sigma_pix)
             snr_image += smoothed
+
+    # normalizing SNR
+    snr_image = (snr_image - snr_image.min()) / (snr_image.max() - snr_image.min())
 
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()

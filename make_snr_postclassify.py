@@ -88,6 +88,9 @@ def snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, source_dec, 
     ra_min, ra_max = header_df["RA"].min() - window_rad, header_df["RA"].max() + window_rad
     dec_min, dec_max = header_df["DEC"].min() - window_rad, header_df["DEC"].max() + window_rad
 
+    # normalizing SNR
+    new_df["SNR"] = (new_df["SNR"] - new_df["SNR"].min()) / (new_df["SNR"].max() - new_df["SNR"].min())
+
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     #scatter_header_df = ax.scatter(header_df['RA'], header_df['DEC'], vmin=0.0, c=pd.Series(0, index=header_df['RA'].index), cmap='viridis', edgecolor="black", label="__nolegend__", markersize=150)
@@ -157,6 +160,9 @@ def spatial_snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, sour
             smoothed = gaussian_filter(temp_image, sigma=kernel_sigma_pix)
             snr_image += smoothed
     
+    # normalizing SNR
+    snr_image = (snr_image - snr_image.min()) / (snr_image.max() - snr_image.min())
+
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     skysnr = ax.imshow(snr_image, origin="lower", cmap="viridis", extent=[ra_min, ra_max, dec_min, dec_max])
