@@ -163,6 +163,9 @@ def spatial_snr_plot(header_df, df, new_df, dm_tol, toA, dm_ver, source_ra, sour
     # normalizing SNR
     snr_image = (snr_image - snr_image.min()) / (snr_image.max() - snr_image.min())
 
+    # saving spatial SNR map as numpy array to load later
+    np.save(os.path.join(output_dir, "SNR_postclustering_skymap.npy"), snr_image)
+
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     skysnr = ax.imshow(snr_image, origin="lower", cmap="viridis", extent=[ra_min, ra_max, dec_min, dec_max])

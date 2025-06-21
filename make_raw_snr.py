@@ -238,6 +238,9 @@ def spatial_snr_plot(header_df, cands, traced_h5files_path, source_ra, source_de
     # normalizing SNR
     snr_image = (snr_image - snr_image.min()) / (snr_image.max() - snr_image.min())
 
+    # saving spatial SNR map as numpy array to load later
+    np.save(os.path.join(output_dir, "rSNR_skymap.npy"), snr_image)
+
     fig = uplt.figure(width=7.5, height=5)
     ax = fig.subplot()
     skysnr = ax.imshow(snr_image, origin="lower", cmap="viridis", extent=[ra_min, ra_max, dec_min, dec_max])
