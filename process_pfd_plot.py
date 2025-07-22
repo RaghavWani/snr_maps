@@ -6,6 +6,7 @@ from matplotlib.ticker import FormatStrFormatter
 from astropy import units as u
 from astropy.coordinates import Angle
 from tabulate import tabulate
+from astropy.time import Time
 import os
 import re
 import warnings
@@ -123,7 +124,7 @@ def beam_pattern_plot(merged_df, src_name, band, output_dir):
     plt.show()
 
 # Folded SNR plotting
-def fold_snr_plot(merged_df, src_name, band, pc_ra,pc_dec, output_dir, normal, saveif):
+def fold_snr_plot(merged_df, src_name, band, pc_ra,pc_dec, output_dir, nbeams, normal, saveif):
     '''
     Plots SNR scatter plot for merged dataframe. Saves the data and folded snr map to output directory.
     '''
@@ -142,7 +143,24 @@ def fold_snr_plot(merged_df, src_name, band, pc_ra,pc_dec, output_dir, normal, s
 
     #SNR Map from data:
     fig, ax = plt.subplots(figsize=(7.5,5), constrained_layout=True)
-    scatter = ax.scatter(merged_df['RA'], merged_df['DEC'], c=merged_df['SNR'], s=150, cmap='viridis', edgecolors='black', alpha=1)
+    if nbeams == 160:
+        s = 400
+    elif nbeams == 640:
+        s = 150
+    else:
+        print(f"Efficient Markersize not tested for provided {nbeams}")
+    
+    #cand_ra_dec = "07h42m48.9513465s -28d22m44.30356s" 
+    #if cand_ra_dec:
+        # plotting the precessed coords
+     #   obstime = Time(mjd, format="mjd")
+     #   coords = SkyCoord(cand_ra_dec, frame="icrs")
+     #   tc = coords.transform_to(TETE(obstime=obstime))
+     #   ax.scatter(tc.ra.rad, tc.dec.rad, c="grey", marker=".", markersize=50, label="Precessed coords")
+    #else:
+     #   print("Not plotting precessed coords~!")
+
+    scatter = ax.scatter(merged_df['RA'], merged_df['DEC'], c=merged_df['SNR'], s=s, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
     ax.plot(pc_ra, pc_dec, '*',markersize=8, label="Phase Centre", color='red')
     ax.plot(src_ra, src_dec, 'o',markersize=2, label=f"Max SNR Beam {src_bm}", color='k')
@@ -161,7 +179,7 @@ def fold_snr_plot(merged_df, src_name, band, pc_ra,pc_dec, output_dir, normal, s
     return merged_df, src_ra, src_dec, src_bm
 
 # Simulated SNR plotting
-def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir, normal):
+def sim_snr_plot(sim_file, src_name, src_ra, src_dec, pc_ra, pc_dec, band, output_dir, nbeams, normal):
     '''
     Plots SNR scatter plot for simulation data. Saves the simulated snr map to output directory.
     '''
@@ -180,14 +198,22 @@ def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir, normal):
     # sim_sm['DEC'] = sim_sm['DEC'].apply(lambda x: (x * u.arcsec).to(u.rad).value)
 
     #Linear transformation (ra dec shift): [REQUIRED IF SIMULATION DATA IS NOT CENTERED AROUND PHASE CENTER]
-    # sim_sm['RA'] += pc_ra 
-    # sim_sm['DEC'] += pc_dec
+    #sim_sm['RA'] += pc_ra 
+    #sim_sm['DEC'] += pc_dec
 
     #SNR Map from simulation:
     fig, ax = plt.subplots(figsize=(7.5,5), constrained_layout=True)
-    scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=sim_sm['SNR'], s=150, cmap='viridis', edgecolors='black', alpha=1)
+    if nbeams == 160:
+        s = 400
+    elif nbeams == 640:
+        s = 150
+    else:
+        print(f"Efficient Markersize not tested for provided {nbeams}")
+
+    scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=sim_sm['SNR'], s=s, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
-    ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
+    ax.plot(pc_ra, pc_dec, '*', markersize=8, label="Phase Centre", color ='red')
+    #ax.plot(src_ra, src_dec, 'o',markersize=2, label='Phase Centre', color='red')
     ax.set_xlabel('Right Ascension (rad)')
     ax.set_ylabel('Declination (rad)')
     ax.set_title(f'Simulation SNR Map: {src_name}, Band {band}')
@@ -201,7 +227,7 @@ def sim_snr_plot(sim_file, src_name, src_ra, src_dec, band, output_dir, normal):
     return sim_sm
 
 # Residual SNR plotting
-def residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec, src_bm, band, output_dir):
+def residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec, src_bm, pc_ra, pc_dec, band, output_dir, nbeams):
     '''
     Plots residual scatter plot for simulation and folded data.
     '''
@@ -211,22 +237,30 @@ def residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec, src_bm, band, outp
     # Residual Details:
     res_details = [
     ["Source Name", src_name],
-    ["Source RA (rad)", "{:.7f}".format(src_ra.iloc[0])],
-    ["Source DEC (rad)", "{:.7f}".format(src_dec.iloc[0])],
-    ["Source BM Idx", src_bm.iloc[0]],
+    #["Source RA (rad)", "{:.7f}".format(src_ra.iloc[0])],
+    #["Source DEC (rad)", "{:.7f}".format(src_dec.iloc[0])],
+    ["Source BM Idx", src_bm],
     ["Max Residual SNR", f"{max(residual['SNR']):.3f} (at BM {fold_sm['BM-Idx'][residual['SNR'].idxmax()]})"],
     ["Min Residual SNR", f"{min(residual['SNR']):.3f} (at BM {fold_sm['BM-Idx'][residual['SNR'].idxmin()]})"],
-    ["Residual at Source Coord", "{:.3f}".format(residual[residual['BM-Idx'] == src_bm.iloc[0]]['SNR'].iloc[0])],
+    ["Residual at Source Coord", "{:.3f}".format(residual[residual['BM-Idx'] == src_bm]['SNR'].iloc[0])],
     ]
 
-    print("Residaul Details:")
+    print("\nResidaul Details:")
     print(tabulate(res_details, tablefmt="plane"))
     
     #Residual Plot:
     fig, ax = plt.subplots(figsize=(7.5,5), constrained_layout=True)
-    scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=residual['SNR'], s=150, cmap='viridis', edgecolors='black', alpha=1)
+    if nbeams == 160:
+        s = 400
+    elif nbeams == 640:
+        s = 150
+    else:
+        print(f"Efficient Markersize not tested for provided {nbeams}")
+
+    scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=residual['SNR'], s=s, cmap='viridis', edgecolors='black', alpha=1)
     fig.colorbar(scatter, ax=ax, label='SNR')
-    ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
+    ax.plot(pc_ra, pc_dec, '*',markersize=8, label="Phase Centre", color ='red')
+    #ax.plot(src_ra, src_dec, 'o',markersize=2, label='Pulsar Coord', color='red')
     ax.set_xlabel('Right Ascension (rad)')
     ax.set_ylabel('Declination (rad)')
     ax.set_title(f'SNR Residual Plot: {src_name}, Band {band}')
@@ -268,12 +302,12 @@ def main():
         beam_pattern_plot(new_data,src_name, band,output_dir_path)
 
         log.info(f"Plotting Folded SNR Map...")
-        fold_sm, src_ra, src_dec, src_bm = fold_snr_plot(new_data, src_name, band, pc_ra, pc_dec, output_dir_path, normal, saveif)
+        fold_sm, src_ra, src_dec, src_bm = fold_snr_plot(new_data, src_name, band, pc_ra, pc_dec, output_dir_path, nbeams, normal, saveif)
         log.info(f"Plotting Simulated SNR Map...")
-        sim_sm = sim_snr_plot(sim_file_path, src_name, src_ra, src_dec, band, output_dir_path, normal)
-        
+        sim_sm = sim_snr_plot(sim_file_path, src_name, src_ra, src_dec, pc_ra, pc_dec, band, output_dir_path, nbeams, normal)
+
         log.info(f"Plotting Residual SNR Map...")
-        residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec ,src_bm, band, output_dir_path)
+        residual_plot(fold_sm, sim_sm, src_name, src_ra, src_dec ,src_bm, pc_ra, pc_dec, band, output_dir_path, nbeams)
 
         print(f"\nAll SNR Map plots and folded data saved to {output_dir_path}")
     
