@@ -1,22 +1,27 @@
-# I. CONFIG FOR FOLDED SNR PLOTTING SCRIPT
+#########################################
+# CONFIG FOR FOLDED SNR PLOTTING SCRIPT #
+#########################################
 
 # Observation Details ------>
 src_ra_dec: "07:42:48.9513465 -28:22:44.30356" # RA and DEC of the source from ATNF PSR Catalogue (e.g., "07:42:48.9513465 -28:22:44.30356")
-
-# Ellipse parameters for beam pattern plot ------>
-ellipse_a: 32.63          # Semi-major axis (in arcseconds)
-ellipse_b: 21.70         # Semi-minor axis (in arcseconds)
-ellipse_angle: 136.19          # Angle of the ellipse in degrees (from beam simulation)
 normal: True              # Normalized SNR map plot - Folded, Simulated and Residual
 saveif: True              # For saving folded SNR map data in a csv file
 
-# Paths for data and output ------>
-header_dir_path: "G:\\SPOTLIGHT\\snr_map_testing\\header_files" # Path to the directory containing the header files
-pfd_dir_path: "G:\\SPOTLIGHT\\snr_map_testing\\FOLDING_OUTPUTS"        # Path to the directory containing the pfd files
-sim_file_path: "G:\\SPOTLIGHT\\snr_map_testing\\snr_obs2.txt" # Path to the file containing the simulation data
-output_dir_path: "G:\\SPOTLIGHT\\snr_map_testing"  # Path to the directory where the snr plot and data will be saved
+# Ellipse parameters for beam pattern plot ------>
+# (from beam simulation) 
+ellipse_a: 32.63         # Semi-major axis (in arcseconds)
+ellipse_b: 21.70         # Semi-minor axis (in arcseconds)
+ellipse_angle: 136.19    # Angle of the ellipse in degrees 
 
-# II. CONFIG FOR SNR MAPS FROM RAW DATA, STAGE-WISE SNR MAPS
+# Paths for data and output ------>
+header_dir_path: "G:\\SPOTLIGHT\\snr_map_testing\\header_files"   # Path to the directory containing the header files (ahdr files)
+pfd_dir_path: "G:\\SPOTLIGHT\\snr_map_testing\\FOLDING_OUTPUTS"   # Path to the directory containing the PRESTO's folding output (pfd files)
+sim_file_path: "G:\\SPOTLIGHT\\snr_map_testing\\snr_obs2.txt"     # Path to the file containing the simulation data
+output_dir_path: "G:\\SPOTLIGHT\\snr_map_testing"                 # Path to the directory where the snr plot and data will be saved
+
+##########################################################
+# CONFIG FOR SNR MAPS FROM RAW DATA, STAGE-WISE SNR MAPS #
+##########################################################
 
 # Observation details ----->
 scan_id: "J0534+2200_20250420_193105"

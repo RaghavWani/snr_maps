@@ -1,7 +1,12 @@
 #!/bin/bash
 
+# Script to fold filterbank files for a pulsar using prepfold
+# Source relevant env before running this script (/lustre_archive/apps/tdsoft/env.sh)
+# Usage: ./folding.sh
+# Last updated: 23 July 2025; Author: Raghav Wani
+
 n_beams=800 #number of beams
-par_file="B0329+54.par" #parameter file for pulsar
+par_file="B0329+54.par" #parameter file for pulsar from ATNF catalogue
 fil_dir="SPLT_1Jan_B0329_B3" #path of directory containing filterbank files
 
 out_dir="${fil_dir}/FOLDING_OUTPUTS" #output directory

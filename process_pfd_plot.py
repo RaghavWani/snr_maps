@@ -1,3 +1,26 @@
+######################################################################
+# Python sciript that reads the configuration from a YAML file, processes 
+# the PRESTO's pulsar folding output files (pfd) to extract SNR data, 
+# and generates various plots including beam patterns, folded SNR maps, 
+# simulated SNR maps, and residual SNR maps. The script mainly acts as a
+# verification tool for the observation of pulsars using the SPOTLIGHT
+# multi-beam system.
+# 
+# This script plots:
+#    1. Beam pattern plot (BeamPattern_{src_name}_B{band}.png) 
+#    2. folded snr map data (SNRMapFOLD_{src_name}_B{band}.csv) 
+#       (if saveif=True)
+#    3. folded snr map plot (SNRMapFOLD_{src_name}_B{band}.png)
+#    4. simulated snr map plot (SNRMapSIM_{src_name}_B{band}.png)
+#    5. residual details (as log message)
+#    6. residual snr plot (SNRMapRES_{src_name}_B{band}.png)
+# 
+# Edit `config.yaml` and Source relevant env before running this script
+#        (/lustre_archive/apps/tdsoft/env.sh)
+#
+#  Last Update: 23rd July 2025; ~ Raghav Wani
+######################################################################
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
