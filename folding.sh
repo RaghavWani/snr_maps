@@ -4,12 +4,6 @@ n_beams=800 #number of beams
 par_file="B0329+54.par" #parameter file for pulsar
 fil_dir="SPLT_1Jan_B0329_B3" #path of directory containing filterbank files
 
-# Check if required arguments are provided
-if [[ -z $n_beams || -z $par_file || -z $fil_dir ]]; then
-    echo "Usage: $0 <n_beams> <par_file> <fil_dir>"
-    exit 1
-fi
-
 out_dir="${fil_dir}/FOLDING_OUTPUTS" #output directory
 mkdir -p "$out_dir"
 
