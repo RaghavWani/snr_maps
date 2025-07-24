@@ -1,4 +1,4 @@
-######################################################################
+#########################################################################
 # Python sciript that reads the configuration from a YAML file, processes 
 # the PRESTO's pulsar folding output files (pfd) to extract SNR data, 
 # and generates various plots including beam patterns, folded SNR maps, 
@@ -19,7 +19,7 @@
 #        (/lustre_archive/apps/tdsoft/env.sh)
 #
 #  Last Update: 23rd July 2025; ~ Raghav Wani
-######################################################################
+#########################################################################
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,7 +34,6 @@ from datetime import datetime
 from matplotlib.patches import Ellipse
 from tabulate import tabulate
 import warnings, logging
-
 
 warnings.filterwarnings('ignore')
 logging.basicConfig(level="INFO", datefmt="[%X]", format="%(message)s")
@@ -53,6 +52,7 @@ def load_config(config_path="config.yaml"):
     
     return config
 
+# Function to convert IST Date/Time to MJD
 def getmjd(t: datetime):
     """
     Function to convert an IST Date/Time to MJD
@@ -64,6 +64,7 @@ def getmjd(t: datetime):
     mjd = Time(utcdt).mjd
     return mjd
 
+# Function to precess the source coordinates to the specified epoch
 def get_precessed_coords(src_ra_dec, mjd):
     """
     Function to precess the source coordinates to the specified epoch.
@@ -83,8 +84,7 @@ def get_precessed_coords(src_ra_dec, mjd):
 
     return precessed_coord
 
-# Function to get ra dec from ahdr files 
-# [This function WILL NOT BE USED Once Ra Dec in filterbank issue is fixed]
+# Function to get ra dec from ahdr files
 def ra_dec_from_ahdr(directory_path):
     """
     Extracts RA, DEC, BM-Idx, and BM-SubIdx values from ahdr files in a directory.
@@ -141,25 +141,23 @@ def ra_dec_from_ahdr(directory_path):
     ahdr_data = ahdr_data.apply(lambda col: pd.to_numeric(col, errors='coerce'))
     return ahdr_data, src_name, pc_ra, pc_dec, nbeams, band, mjd
 
-# Function to get PSR code from source name
-def get_psr_code(src_name):
-    match = re.match(r'^[A-Z](\d{4}[+-]\d{4})$', src_name)
-    if match:
-        return f"PSR_{match.group(1)}"
-    else:
-        raise ValueError("Invalid code format")
-    
 # Snr data from pfd files
 def extract_snr(pfd_dir, ahdr_data, nbeams, src_name):
     '''
     Extracts beam index and snr from folding outputs *.pfd.bestprof files 
     Returns a new dataframe RA, DEC, BM-Idx, BM-SubIdx, SNR
     '''
+    match = re.match(r'^[A-Z](\d{4}[+-]\d{4})$', src_name)
+    if match:
+        psr_code = f"PSR_{match.group(1)}"
+    else:
+        raise ValueError("Invalid Source Name detected in header file.")
+    
     data_columns = ["BM-Idx", "SNR"]
     pfd_data = pd.DataFrame(columns=data_columns)
 
     for i in range(nbeams):
-        filename = f"L{i}aa_{get_psr_code(src_name)}.pfd.bestprof"
+        filename = f"L{i}aa_{psr_code}.pfd.bestprof"
         file_path = os.path.join(pfd_dir, filename)
         
         if os.path.isfile(file_path) and filename.endswith('.pfd.bestprof'):
@@ -208,7 +206,7 @@ def fold_snr_plot(merged_df, src_name, pc_ra, pc_dec, band, a, b, angle, output_
     '''
     Plots SNR scatter plot for merged dataframe. Saves the data and folded snr map to output directory.
     '''
-    merged_df.sort_values(by=['BM-Idx'],ascending=True,inplace=True)
+    merged_df.sort_values(by=['RA', 'DEC'],ascending=[True,True],inplace=True)
     merged_df.reset_index(drop=True, inplace=True)
     
     if normal:
@@ -269,7 +267,7 @@ def sim_snr_plot(sim_file, src_name, pc_ra, pc_dec, band, a, b, angle, output_di
     sim_sm = pd.read_csv(sim_file, delim_whitespace=True, header=None) 
     sim_sm.columns = ['DEC', 'RA', 'SNR', 'BM-Idx']
 
-    sim_sm.sort_values(by=['BM-Idx'],ascending=True,inplace=True)
+    sim_sm.sort_values(by=['RA', 'DEC'],ascending=[True,True],inplace=True)
     sim_sm.reset_index(drop=True, inplace=True)
     
     if normal:
