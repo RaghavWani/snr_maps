@@ -9,15 +9,21 @@ saveif: True              # For saving folded SNR map data in a csv file
 
 # Ellipse parameters for beam pattern plot ------>
 # (from beam simulation) 
-ellipse_a: 32.63         # Semi-major axis (in arcseconds)
-ellipse_b: 21.70         # Semi-minor axis (in arcseconds)
-ellipse_angle: 136.19    # Angle of the ellipse in degrees 
+ellipse_a: 20.32        # Semi-major axis (in arcseconds)
+ellipse_b: 7.92         # Semi-minor axis (in arcseconds)
+ellipse_angle: -131.56  # Angle of the ellipse in degrees 
+
+# Simulation Beam Details ------>
+# Enter the log file auto_tile-<Date>-<Time>.log NOTE - Time should be the time immediate before the scan time. Get the "Selected tiling <sel_beam>" from the log file
+sel_beam: "g0"
+#log_file: "/lustre_archive/spotlight/data/TEST_20250721_031926/BMSTR_SIM/auto_tile-26-07-25-144858.log"
+radec_offset: "0,0" # Offset- (ra,dec) in arc sec
+make_beam_file: "/lustre_archive/spotlight/data/TEST_20250726_142132/BMSTR_SIM/make_beam-26-07-25-144858.pkl"
 
 # Paths for data and output ------>
-header_dir_path: "G:\\SPOTLIGHT\\snr_map_testing\\header_files"   # Path to the directory containing the header files (ahdr files)
-pfd_dir_path: "G:\\SPOTLIGHT\\snr_map_testing\\FOLDING_OUTPUTS"   # Path to the directory containing the PRESTO's folding output (pfd files)
-sim_file_path: "G:\\SPOTLIGHT\\snr_map_testing\\snr_obs2.txt"     # Path to the file containing the simulation data
-output_dir_path: "G:\\SPOTLIGHT\\snr_map_testing"                 # Path to the directory where the snr plot and data will be saved
+header_dir_path: "/lustre_data/spotlight/data/TEST_20250726_142132/BeamData/J0742-2822_20250726_145001"               # Path to the directory containing the header files (ahdr files)
+pfd_dir_path: "/lustre_data/spotlight/data/TEST_20250726_142132/FilData/J0742-2822_20250726_145001/FOLDING_OUTPUTS"   # Path to the directory containing the PRESTO's folding output (pfd files)
+output_dir_path: "/lustre_data/spotlight/data/TEST_20250726_142132/FilData/J0742-2822_20250726_145001"                # Path to the directory where the snr plot and data will be saved
 
 ##########################################################
 # CONFIG FOR SNR MAPS FROM RAW DATA, STAGE-WISE SNR MAPS #

@@ -1,12 +1,13 @@
 #########################################################################
 # Python sciript that reads the configuration from a YAML file, processes 
 # the PRESTO's pulsar folding output files (pfd) to extract SNR data, 
-# and generates various plots including beam patterns, folded SNR maps, 
-# simulated SNR maps, and residual SNR maps. The script mainly acts as a
-# verification tool for the observation of pulsars using the SPOTLIGHT
-# multi-beam system.
+# performs beam simulation using information from make_beam file generated
+# during observation and generates various plots including beam patterns, 
+# folded SNR map, simulated SNR map, and residual SNR map. 
+# The script mainly acts as a verification tool for the observation of 
+# pulsars using the SPOTLIGHT multi-beam system.
 # 
-# This script plots:
+# This script generates:
 #    1. Beam pattern plot (BeamPattern_{src_name}_B{band}.png) 
 #    2. folded snr map data (SNRMapFOLD_{src_name}_B{band}.csv) 
 #       (if saveif=True)
@@ -18,13 +19,14 @@
 # Edit `config.yaml` and Source relevant env before running this script
 #        (/lustre_archive/apps/tdsoft/env.sh)
 #
-#  Last Update: 23rd July 2025; ~ Raghav Wani
+#  Last Update: 29th July 2025; ~ Raghav Wani
 #########################################################################
 
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import yaml, os, re, pytz
+import yaml, os, re, pytz, sys, getopt
+import pickle
 from matplotlib.ticker import FormatStrFormatter
 from matplotlib.collections import PatchCollection
 from astropy import units as u
@@ -34,6 +36,10 @@ from datetime import datetime
 from matplotlib.patches import Ellipse
 from tabulate import tabulate
 import warnings, logging
+
+# Hard coding some path required for simulation software
+py_path = "/lustre_archive/apps/correlator/code/conda/bin/python3.1"
+prg_path = "/lustre_archive/apps/correlator/code/BMSTEERING-NEW/at/"
 
 warnings.filterwarnings('ignore')
 logging.basicConfig(level="INFO", datefmt="[%X]", format="%(message)s")
@@ -258,10 +264,20 @@ def fold_snr_plot(merged_df, src_name, pc_ra, pc_dec, band, a, b, angle, output_
     return merged_df, src_closest_bm
 
 # Simulated SNR plotting
-def sim_snr_plot(sim_file, src_name, pc_ra, pc_dec, band, a, b, angle, output_dir, normal, src_ra_dec):
+def sim_snr_plot(src_name, pc_ra, pc_dec, band, a, b, angle, output_dir, normal, src_ra_dec, nbeams, make_beam_file, sel_beam, radec_offset):
     '''
     Plots SNR scatter plot for simulation data. Saves the simulated snr map to output directory.
     '''
+    
+    # Beam Simulation Program (Author: Jayaram Chengalur, Mekhala Muley)
+    #print('Executing tiling program...')
+    tile_cmd = py_path + " " + prg_path + "make_tile.py " + " -F" + make_beam_file + " -" + sel_beam + " -n" + str(nbeams) + " -C" + " -R" + radec_offset
+    os.system(tile_cmd)
+
+    snr_cmd = py_path + " read_gmrttile.py"
+    os.system(snr_cmd)
+    pwd = os.getcwd()
+    sim_file = f"{pwd}/sim_snr.txt"
 
     # Simulation SNR map data:
     sim_sm = pd.read_csv(sim_file, delim_whitespace=True, header=None) 
@@ -379,10 +395,13 @@ def main():
         a = config.get("ellipse_a")
         b = config.get("ellipse_b")
         angle = config.get("ellipse_angle")
-        
+
+        radec_offset = config.get("radec_offset")
+        sel_beam = config.get("sel_beam")
+        make_beam_file = config.get("make_beam_file")
+
         header_dir_path = config.get("header_dir_path")
         pfd_dir_path = config.get("pfd_dir_path")
-        sim_file_path = config.get("sim_file_path")
         output_dir_path = config.get("output_dir_path")
         
         a = (a * u.arcsec).to(u.rad).value
@@ -404,19 +423,22 @@ def main():
 
         new_data = extract_snr(pfd_dir_path, ahdr_data, nbeams, src_name)
 
-        log.info(f"Plotting Beam Pattern...")
+        print(f"Plotting Beam Pattern...", end = "")
         beam_pattern_plot(new_data,src_name, band,output_dir_path)
+        print("Done")
 
-        log.info(f"Plotting Folded SNR Map...")
+        print(f"Plotting Folded SNR Map...", end = "")
         fold_sm, src_bm = fold_snr_plot(new_data, src_name, pc_ra, pc_dec, band, a, b, angle, output_dir_path, normal, saveif, src_ra_dec)
+        print("Done")
 
-        log.info(f"Plotting Simulated SNR Map...")
-        sim_sm = sim_snr_plot(sim_file_path, src_name, pc_ra, pc_dec, band, a, b, angle, output_dir_path, normal, src_ra_dec)
+        print(f"Executing tiling program...", end = "")
+        sim_sm = sim_snr_plot(src_name, pc_ra, pc_dec, band, a, b, angle, output_dir_path, normal, src_ra_dec, nbeams, make_beam_file, sel_beam, radec_offset)
+        print("Done")
 
         if normal != True:
             print("Residual plot requires normalized data. Set 'normal' to True in config file.")
         else:
-            log.info(f"Plotting Residual SNR Map...")
+            print(f"Plotting Residual SNR Map...", end = "")
             residual_plot(fold_sm, sim_sm, src_name, src_bm, pc_ra, pc_dec, band,  a, b, angle, output_dir_path, src_ra_dec)
 
         print(f"\nAll SNR Map plots and folded data saved to {output_dir_path}")
