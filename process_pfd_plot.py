@@ -19,7 +19,7 @@
 # Edit `config.yaml` and Source relevant env before running this script
 #        (/lustre_archive/apps/tdsoft/env.sh)
 #
-#  Last Update: 29th July 2025; ~ Raghav Wani
+#  Last Update: 11th August 2025; ~ Raghav Wani
 #########################################################################
 
 import numpy as np
@@ -123,7 +123,7 @@ def ra_dec_from_ahdr(directory_path):
                 ist = " ".join([date_line.strip().split()[-1], isttime_line.strip().split()[-1][:-3]])
                 istdatetime = datetime.strptime(ist, "%d/%m/%Y %H:%M:%S.%f")
                 mjd = getmjd(istdatetime)
-
+                
                 if int(freq) == 500000000:
                     band = 3
                 elif int(freq) == 550000000:
@@ -208,7 +208,7 @@ def beam_pattern_plot(merged_df, src_name, band, output_dir):
     plt.show()
 
 # Folded SNR plotting
-def fold_snr_plot(merged_df, src_name, pc_ra, pc_dec, band, a, b, angle, output_dir, normal, saveif, src_ra_dec=None):
+def fold_snr_plot(merged_df, src_name, pc_ra, pc_dec, band, nbeams, a, b, angle, output_dir, normal, saveif, only_folded_map, src_ra_dec=None):
     '''
     Plots SNR scatter plot for merged dataframe. Saves the data and folded snr map to output directory.
     '''
@@ -233,21 +233,29 @@ def fold_snr_plot(merged_df, src_name, pc_ra, pc_dec, band, a, b, angle, output_
 
     #SNR Map from data:
     fig, ax = plt.subplots(figsize=(7.5,5), constrained_layout=True)
-    ellipses=[Ellipse(xy=(x,y), width=a, height=b, angle = angle, edgecolor='blue', fill=True)
+    if only_folded_map:
+        if nbeams == 160:
+            s = 400
+        elif nbeams == 640:
+            s = 150
+        else:
+            print(f"Efficient Markersize not tested for provided {nbeams}")
+        
+        scatter = ax.scatter(merged_df['RA'], merged_df['DEC'], c=merged_df['SNR'], s=s, cmap='viridis', edgecolors='black', alpha=1)
+        fig.colorbar(scatter, ax=ax, label='SNR')
+    else:
+        ellipses=[Ellipse(xy=(x,y), width=a, height=b, angle = angle, edgecolor='blue', fill=True)
             for (x,y) in zip(merged_df['RA'], merged_df['DEC'])]
-    e_col=PatchCollection(ellipses)
-    e_col.set(array=merged_df['SNR'],cmap='viridis')
-    ax.add_collection(e_col)
-    plt.colorbar(e_col)
+        e_col=PatchCollection(ellipses)
+        e_col.set(array=merged_df['SNR'],cmap='viridis')
+        ax.add_collection(e_col)
+        plt.colorbar(e_col)
     
     if src_ra_dec:
         ax.plot(src_ra_dec.ra.rad, src_ra_dec.dec.rad, '+', markersize=15, label='Precessed Pulsar Coord', color='forestgreen', alpha=1)
     
-    # scatter = ax.scatter(merged_df['RA'], merged_df['DEC'], c=merged_df['SNR'], s=150, cmap='viridis', edgecolors='black', alpha=1)
-    # fig.colorbar(scatter, ax=ax, label='SNR')
     ax.plot(pc_ra, pc_dec, '*', markersize=10, label="Phase Centre", color='red')
     ax.plot(high_snr_ra, high_snr_dec, 'o', markersize=3, label=f"Max SNR Beam {high_snr_bm}", color='k')
-    
     ax.set_xlabel('Right Ascension (rad)')
     ax.set_ylabel('Declination (rad)')
     ax.set_title(f'Folded SNR Map: {src_name}, Band {band}')
@@ -316,8 +324,6 @@ def sim_snr_plot(src_name, pc_ra, pc_dec, band, a, b, angle, output_dir, normal,
     if src_ra_dec:
         ax.plot(src_ra_dec.ra.rad, src_ra_dec.dec.rad, '+', markersize=15, label='Precessed Pulsar Coord', color='forestgreen', alpha=1)
 
-    # scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=sim_sm['SNR'], s=150, cmap='viridis', edgecolors='black', alpha=1)
-    # fig.colorbar(scatter, ax=ax, label='SNR')
     ax.plot(pc_ra, pc_dec, '*', markersize=10, label="Phase Centre", color='red')
     ax.plot(high_snr_ra, high_snr_dec, 'o', markersize=3, label=f"Max SNR Beam {high_snr_bm}", color='k')
 
@@ -370,8 +376,6 @@ def residual_plot(fold_sm, sim_sm, src_name, src_bm, pc_ra, pc_dec, band, a, b, 
     if src_ra_dec:
         ax.plot(src_ra_dec.ra.rad, src_ra_dec.dec.rad, '+', markersize=15, label='Precessed Pulsar Coord', color='forestgreen', alpha=1)
 
-    # scatter = ax.scatter(sim_sm['DEC'], sim_sm['RA'], c=residual['SNR'], s=150, cmap='viridis', edgecolors='black')
-    # fig.colorbar(scatter, ax=ax, label='SNR')
     ax.plot(pc_ra, pc_dec, '*', markersize=8, label="Phase Centre", color='red')
     ax.set_xlabel('Right Ascension (rad)')
     ax.set_ylabel('Declination (rad)')
@@ -392,21 +396,13 @@ def main():
         src_ra_dec = config.get("src_ra_dec")  # Expected format: "RA DEC" (e.g., "07:42:48.9513465 -28:22:44.30356")
         normal = config.get("normal")
         saveif = config.get("saveif")
-        a = config.get("ellipse_a")
-        b = config.get("ellipse_b")
-        angle = config.get("ellipse_angle")
+        only_folded_map = config.get("only_folded_map")
 
-        radec_offset = config.get("radec_offset")
-        sel_beam = config.get("sel_beam")
-        make_beam_file = config.get("make_beam_file")
 
         header_dir_path = config.get("header_dir_path")
         pfd_dir_path = config.get("pfd_dir_path")
         output_dir_path = config.get("output_dir_path")
         
-        a = (a * u.arcsec).to(u.rad).value
-        b = (b * u.arcsec).to(u.rad).value
-
         # Main script
         if not isinstance(normal, bool):
             raise ValueError("Config error: 'normal' must be either True or False (boolean).")
@@ -416,30 +412,49 @@ def main():
 
         ahdr_data, src_name, pc_ra, pc_dec,  nbeams, band, mjd = ra_dec_from_ahdr(header_dir_path)
         log.info(f"Processing PFD files from {pfd_dir_path} with {nbeams} beams...")
+        
         if src_ra_dec:
             src_ra_dec = get_precessed_coords(src_ra_dec, mjd)
         else:
             raise ValueError("Please provide pulsar coordinates from ATNF PSR Catalogue in the format 'RA DEC' (e.g., '07:42:48.9513465 -28:22:44.30356')")
+        
+        src_name = 'J2018+2839' # EDIT ONLY IF SOURCE NAME NOT CORRECT IN HEADER FILE
 
         new_data = extract_snr(pfd_dir_path, ahdr_data, nbeams, src_name)
-
         print(f"Plotting Beam Pattern...", end = "")
         beam_pattern_plot(new_data,src_name, band,output_dir_path)
         print("Done")
+        
+        if not only_folded_map:
+            a = config.get("ellipse_a")
+            b = config.get("ellipse_b")
+            angle = config.get("ellipse_angle")
+            a = (a * u.arcsec).to(u.rad).value
+            b = (b * u.arcsec).to(u.rad).value
 
-        print(f"Plotting Folded SNR Map...", end = "")
-        fold_sm, src_bm = fold_snr_plot(new_data, src_name, pc_ra, pc_dec, band, a, b, angle, output_dir_path, normal, saveif, src_ra_dec)
-        print("Done")
+            radec_offset = config.get("radec_offset")
+            sel_beam = config.get("sel_beam")
+            make_beam_file = config.get("make_beam_file")
+            
+            print(f"Plotting Folded SNR Map...", end = "")
+            fold_sm, src_bm = fold_snr_plot(new_data, src_name, pc_ra, pc_dec, band, nbeams, a, b, angle, output_dir_path, normal, saveif, only_folded_map, src_ra_dec)
+            print("Done")
+            
+            print(f"Executing tiling program...", end = "")
+            sim_sm = sim_snr_plot(src_name, pc_ra, pc_dec, band, a, b, angle, output_dir_path, normal, src_ra_dec, nbeams, make_beam_file, sel_beam, radec_offset)
+            print("Done")
 
-        print(f"Executing tiling program...", end = "")
-        sim_sm = sim_snr_plot(src_name, pc_ra, pc_dec, band, a, b, angle, output_dir_path, normal, src_ra_dec, nbeams, make_beam_file, sel_beam, radec_offset)
-        print("Done")
-
-        if normal != True:
-            print("Residual plot requires normalized data. Set 'normal' to True in config file.")
+            if normal != True:
+                print("Residual plot requires normalized data. Set 'normal' to True in config file.")
+            else:
+                print(f"Plotting Residual SNR Map...", end = "")
+                residual_plot(fold_sm, sim_sm, src_name, src_bm, pc_ra, pc_dec, band, a, b, angle, output_dir_path, src_ra_dec)
+        elif only_folded_map:
+            print(f"Plotting Folded SNR Map Only...", end = "")
+            fold_sm, src_bm = fold_snr_plot(new_data, src_name, pc_ra, pc_dec, band, nbeams, None, None, None, output_dir_path, normal, saveif, only_folded_map, src_ra_dec)
+            print("Done")
         else:
-            print(f"Plotting Residual SNR Map...", end = "")
-            residual_plot(fold_sm, sim_sm, src_name, src_bm, pc_ra, pc_dec, band,  a, b, angle, output_dir_path, src_ra_dec)
+            raise ValueError("Config error: 'only_folded_map' must be either True or False (boolean).")
 
         print(f"\nAll SNR Map plots and folded data saved to {output_dir_path}")
     except Exception as e:

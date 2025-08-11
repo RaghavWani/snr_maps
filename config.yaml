@@ -3,27 +3,28 @@
 #########################################
 
 # Observation Details ------>
-src_ra_dec: "07:42:48.9513465 -28:22:44.30356" # RA and DEC of the source from ATNF PSR Catalogue (e.g., "07:42:48.9513465 -28:22:44.30356")
-normal: True              # Normalized SNR map plot - Folded, Simulated and Residual
-saveif: True              # For saving folded SNR map data in a csv file
+src_ra_dec: "20:18:03.8333 +28:39:54.212" # RA and DEC of the source from ATNF PSR Catalogue (e.g., "07:42:48.9513465 -28:22:44.30356")
+normal: True                # Normalized SNR map plot - Folded, Simulated and Residual
+saveif: True                # For saving folded SNR map data in a csv file
+only_folded_map: False      # For generating only folded SNR Maps for quicker analysis
 
 # Ellipse parameters for beam pattern plot ------>
 # (from beam simulation) 
-ellipse_a: 20.32        # Semi-major axis (in arcseconds)
-ellipse_b: 7.92         # Semi-minor axis (in arcseconds)
-ellipse_angle: -131.56  # Angle of the ellipse in degrees 
+ellipse_a: 38.55        # Semi-major axis (in arcseconds)
+ellipse_b: 32.82        # Semi-minor axis (in arcseconds)
+ellipse_angle: -101.14  # Angle of the ellipse in degrees 
 
 # Simulation Beam Details ------>
 # Enter the log file auto_tile-<Date>-<Time>.log NOTE - Time should be the time immediate before the scan time. Get the "Selected tiling <sel_beam>" from the log file
 sel_beam: "g0"
 #log_file: "/lustre_archive/spotlight/data/TEST_20250721_031926/BMSTR_SIM/auto_tile-26-07-25-144858.log"
 radec_offset: "0,0" # Offset- (ra,dec) in arc sec
-make_beam_file: "/lustre_archive/spotlight/data/TEST_20250726_142132/BMSTR_SIM/make_beam-26-07-25-144858.pkl"
+make_beam_file: "/lustre_archive/spotlight/data/TEST2_20250806_232752/BMSTR_SIM/make_beam-07-08-25-012236.pkl"
 
 # Paths for data and output ------>
-header_dir_path: "/lustre_data/spotlight/data/TEST_20250726_142132/BeamData/J0742-2822_20250726_145001"               # Path to the directory containing the header files (ahdr files)
-pfd_dir_path: "/lustre_data/spotlight/data/TEST_20250726_142132/FilData/J0742-2822_20250726_145001/FOLDING_OUTPUTS"   # Path to the directory containing the PRESTO's folding output (pfd files)
-output_dir_path: "/lustre_data/spotlight/data/TEST_20250726_142132/FilData/J0742-2822_20250726_145001"                # Path to the directory where the snr plot and data will be saved
+header_dir_path: "/lustre_data/spotlight/data/TEST2_20250806_232752/BeamData/J2018_0001_20250807_012339"               # Path to the directory containing the header files (ahdr files)
+pfd_dir_path: "/lustre_data/spotlight/data/TEST2_20250806_232752/FilData/J2018_0001_20250807_012339/FOLDING_OUTPUTS"   # Path to the directory containing the PRESTO's folding output (pfd files)
+output_dir_path: "/lustre_data/spotlight/data/TEST2_20250806_232752/FilData"                                           # Path to the directory where the snr plot and data will be saved
 
 ##########################################################
 # CONFIG FOR SNR MAPS FROM RAW DATA, STAGE-WISE SNR MAPS #
