@@ -5,9 +5,10 @@
 # Usage: ./folding.sh
 # Last updated: 23 July 2025; Author: Raghav Wani
 
-n_beams=800 #number of beams
-par_file="B0329+54.par" #parameter file for pulsar from ATNF catalogue
-fil_dir="SPLT_1Jan_B0329_B3" #path of directory containing filterbank files
+n_beams=160 #number of beams
+source_name='J0332+5434'
+par_file="/lustre_archive/spotlight/data/${source_name}.par" #parameter file for pulsar from ATNF catalogue
+fil_dir="/lustre_data/spotlight/data/TST3093_20250909_022047/FilData/J0332+5434_20250909_030222" #directory containing filterbank files
 
 out_dir="${fil_dir}/FOLDING_OUTPUTS" #output directory
 mkdir -p "$out_dir"
