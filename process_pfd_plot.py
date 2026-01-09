@@ -278,7 +278,6 @@ def sim_snr_plot(src_name, pc_ra, pc_dec, band, a, b, angle, output_dir, normal,
     '''
     
     # Beam Simulation Program (Author: Jayaram Chengalur, Mekhala Muley)
-    #print('Executing tiling program...')
     tile_cmd = py_path + " " + prg_path + "make_tile.py " + " -F" + make_beam_file + " -" + sel_beam + " -n" + str(nbeams) + " -C" + " -R" + radec_offset
     os.system(tile_cmd)
 

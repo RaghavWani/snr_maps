@@ -2,7 +2,7 @@
 # CONFIG FOR FOLDED SNR PLOTTING SCRIPT #
 #########################################
 
-# Observation Details ------>
+# Generic Details ------>
 src_ra_dec: "20:18:03.8333 +28:39:54.212" # RA and DEC of the source from ATNF PSR Catalogue (e.g., "07:42:48.9513465 -28:22:44.30356")
 normal: True                # Normalized SNR map plot - Folded, Simulated and Residual
 saveif: True                # For saving folded SNR map data in a csv file

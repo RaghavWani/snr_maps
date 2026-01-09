@@ -14,7 +14,6 @@
 #  Last Update: 07th Nov 2025; ~ Raghav Wani
 ####################################################################
 
-import shutil
 import os
 import glob
 import argparse
@@ -66,8 +65,6 @@ def main():
     args = parser.parse_args()
     
     fil_files = sorted(glob.glob(str(args.input_dir / "*.fil")))
-
-    #fil_files = [f for f in fil_files]
 
     print("""
       _______  _______  _        ______  _________ _        _______ 
